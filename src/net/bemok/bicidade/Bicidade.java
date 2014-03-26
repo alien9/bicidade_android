@@ -1,9 +1,11 @@
 package net.bemok.bicidade;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.events.DelayedMapListener;
@@ -12,7 +14,10 @@ import org.osmdroid.events.ScrollEvent;
 import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.ItemizedIconOverlay;
+import org.osmdroid.views.overlay.OverlayItem;
 
+import android.graphics.drawable.Drawable;
 import android.hardware.SensorManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -31,13 +36,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class Bicidade extends Activity {
-	IGeoPoint center;
-	int zoom;
-	int pos;
+	static IGeoPoint center = new GeoPoint(-23.7, -46.5);
+	static int zoom=14;
+	static int pos=3;
+	static ArrayList<OverlayItem> mItems = new ArrayList<OverlayItem>();
 	boolean centering;
 	OrientationEventListener oel;
-	boolean portrait;
 	MapView map;
+	private ItemizedIconOverlay<OverlayItem> mMyLocationOverlay;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -49,33 +55,56 @@ public class Bicidade extends Activity {
 		final MapView map = (MapView) this.findViewById(R.id.mapview);
 		map.setBuiltInZoomControls(true);
 		map.setMultiTouchControls(true);
+        
+		DefaultResourceProxyImpl mResourceProxy = new DefaultResourceProxyImpl(getApplicationContext());
+
+		this.mMyLocationOverlay = new ItemizedIconOverlay<OverlayItem>(mItems,
+                new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+                    @Override
+                    public boolean onItemSingleTapUp(final int index,
+                            final OverlayItem item) {
+                        Toast.makeText(
+                                Bicidade.this,
+                                "Item '" + item.getTitle(), Toast.LENGTH_LONG).show();
+                        return true; // We 'handled' this event.
+                    }
+                    @Override
+                    public boolean onItemLongPress(final int index,
+                            final OverlayItem item) {
+                        Toast.makeText(
+                        		Bicidade.this, 
+                                "Item '" + item.getTitle() ,Toast.LENGTH_LONG).show();
+                        return false;
+                    }
+                }, mResourceProxy);
+		
+		map.getOverlays().add(this.mMyLocationOverlay);
 		final IMapController c = map.getController();
 		final TextView debug=(TextView) findViewById(R.id.editText1);
-		center = new GeoPoint(-23.7, -46.5);
-		zoom = 14;
-		pos=getResources().getConfiguration().orientation;
 		centering=false;
-		//portrait=getResources().getConfiguration().orientation!=Configuration.ORIENTATION_LANDSCAPE;
 		c.setCenter(center);
 		c.setZoom(zoom);
+		if(pos>2) pos=getResources().getConfiguration().orientation;
 		oel = new OrientationEventListener(this,
 				SensorManager.SENSOR_DELAY_NORMAL) {
 			@Override
 			public void onOrientationChanged(int arg0) {
 				int p=getResources().getConfiguration().orientation;
-				//debug.setText("orient"+pos);
-				
 				if(pos!=p){
-					debug.setText("diff"+pos+" "+p);
+					c.setZoom(zoom);
+					c.setCenter(center);
 					
+					pos=p;
 					return;
+				}else{
+					center = map.getMapCenter();
+					zoom = map.getZoomLevel();				
 				};
 				//debug.setText(debug.getText()+"orient");
 				/*
 				debug.setText(debug.getText()+"mudou "+position);
 				position=getResources().getConfiguration().orientation;
-				c.setCenter(center);
-				c.setZoom(zoom);
+
 				*/
 			}
 		};
@@ -84,12 +113,14 @@ public class Bicidade extends Activity {
 			public boolean onZoom(final ZoomEvent e) {
 				center = map.getMapCenter();
 				zoom = map.getZoomLevel();
+				pos=getResources().getConfiguration().orientation;
 				return true;
 			}
 
 			public boolean onScroll(final ScrollEvent e) {
 				center = map.getMapCenter();
 				zoom = map.getZoomLevel();
+				pos=getResources().getConfiguration().orientation;
 				return true;
 			}
 		}, 1000));
@@ -110,6 +141,10 @@ public class Bicidade extends Activity {
 			centering=true;
 			MapView map = (MapView) this.findViewById(R.id.mapview);
 			map.getController().setZoom(14);
+			OverlayItem olItem = new OverlayItem("Here", "SampleDescription", (GeoPoint) center);
+			Drawable newMarker = this.getResources().getDrawable(R.drawable.center);
+			olItem.setMarker(newMarker);
+			mItems.add(olItem);
 			return true;
 		}
 		return false;
