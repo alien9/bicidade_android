@@ -93,19 +93,12 @@ public class Bicidade extends Activity {
 				if(pos!=p){
 					c.setZoom(zoom);
 					c.setCenter(center);
-					
 					pos=p;
 					return;
 				}else{
 					center = map.getMapCenter();
 					zoom = map.getZoomLevel();				
 				};
-				//debug.setText(debug.getText()+"orient");
-				/*
-				debug.setText(debug.getText()+"mudou "+position);
-				position=getResources().getConfiguration().orientation;
-
-				*/
 			}
 		};
 		oel.enable();
@@ -140,8 +133,9 @@ public class Bicidade extends Activity {
 		case R.id.center:
 			centering=true;
 			MapView map = (MapView) this.findViewById(R.id.mapview);
-			map.getController().setZoom(14);
-			OverlayItem olItem = new OverlayItem("Here", "SampleDescription", (GeoPoint) center);
+			//map.getController().setZoom(14);
+			map.getController().setCenter(center);
+			OverlayItem olItem = new OverlayItem("Minha", "SampleDescription", (GeoPoint) center);
 			Drawable newMarker = this.getResources().getDrawable(R.drawable.center);
 			olItem.setMarker(newMarker);
 			mItems.add(olItem);
