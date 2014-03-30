@@ -4,7 +4,31 @@
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         android:showAsAction="never"
-        android:title="@string/action_settings"/>
-    <item android:id="@+id/center" android:title="Center"></item>
+        android:title="@string/action_settings">
+        <menu>
+            <item
+                android:id="@+id/subida"
+                android:checkable="true"
+                android:enabled="true"
+                android:title="@string/avoid_slope"/>
+            <item android:id="@+id/ciclorota" android:title="@string/ciclorota" android:checkable="true"/>
+        </menu>
+    </item>
+    <item
+        android:id="@+id/center"
+        android:title="@string/my_location">
+    </item>
+    <item
+        android:id="@+id/origem"
+        android:title="@string/origem">
+    </item>
+    <item
+        android:id="@+id/destino"
+        android:title="@string/destino">
+    </item>
+    <item
+        android:id="@+id/remove"
+        android:title="@string/remove">
+    </item>
 
 </menu>
