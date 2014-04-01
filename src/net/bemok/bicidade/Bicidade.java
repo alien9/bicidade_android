@@ -143,13 +143,13 @@ public class Bicidade extends Activity {
 				new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
 					@Override
 					public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
-						Toast.makeText(Bicidade.this, "Item '" + item.getTitle(), Toast.LENGTH_LONG).show();
+						Toast.makeText(Bicidade.this, item.getTitle(), Toast.LENGTH_LONG).show();
 						return true; // We 'handled' this event.
 					}
 
 					@Override
 					public boolean onItemLongPress(final int index, final OverlayItem item) {
-						Toast.makeText(Bicidade.this, "Item '" + item.getTitle(), Toast.LENGTH_LONG).show();
+						Toast.makeText(Bicidade.this, item.getTitle(), Toast.LENGTH_LONG).show();
 						return false;
 					}
 				}, mResourceProxy);
@@ -251,6 +251,7 @@ public class Bicidade extends Activity {
 		ItemizedIconOverlay<OverlayItem> l = null;
 		switch (which) {
 		case 0: // central
+		case R.id.center:
 			l = central;
 			break;
 		case 1:
@@ -270,8 +271,6 @@ public class Bicidade extends Activity {
 		((MapView) this.findViewById(R.id.mapview)).postInvalidate();
 		if (geocode) {
 			arrota();
-			//Brow b = new Brow(getApplicationContext());
-			//b.execute("http://alien9.net/route/?y0=-23.598207199999997&x0=-46.6240683&y1=-23.598284349761034&x1=-46.6342806816101&crit=");
 		}
 	}
 
