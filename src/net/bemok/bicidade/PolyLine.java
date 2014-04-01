@@ -16,7 +16,7 @@ import android.graphics.Point;
 import android.widget.Toast;
 
 public class PolyLine extends Overlay {
-	JSONArray points;
+	JSONArray points=new JSONArray();
 
 	Context context;
 
@@ -30,6 +30,9 @@ public class PolyLine extends Overlay {
 	public void setPoints(JSONArray points) {
 		this.points = points;
 	}
+	public JSONArray getPoints(){
+		return this.points;
+	}
 
 	public void setMap(MapView map) {
 		this.map = map;
@@ -37,6 +40,7 @@ public class PolyLine extends Overlay {
 
 	@Override
 	protected void draw(Canvas canvas, MapView arg1, boolean arg2) {
+		if(points.length()==0)return;
 		Projection p = this.map.getProjection();
 		Point topLeftPoint = new Point();
 		p.toPixels((GeoPoint) p.fromPixels(0, 0), topLeftPoint);

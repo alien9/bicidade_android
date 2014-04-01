@@ -12,6 +12,7 @@
                 android:enabled="true"
                 android:title="@string/avoid_slope"/>
             <item android:id="@+id/ciclorota" android:title="@string/ciclorota" android:checkable="true"/>
+        <item android:id="@+id/contramao" android:title="@string/wrong_way" android:checkable="true"/>
         </menu>
     </item>
     <item

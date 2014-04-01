@@ -13,5 +13,6 @@
     <string name="avoid_slope">Evitar subidas</string>
     <string name="ciclorota">Preferir ciclorota</string>
     <string name="invalid_data">Dados inválidos</string>
-
+   <string name="wrong_way">Permitir contramão</string>
+   
 </resources>

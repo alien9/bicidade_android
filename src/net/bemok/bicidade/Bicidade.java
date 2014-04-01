@@ -56,6 +56,8 @@ public class Bicidade extends Activity {
 	boolean subida = false;
 
 	boolean ciclorota = false;
+	
+	boolean contramao = false;
 
 	static int pos = 3;
 
@@ -91,14 +93,16 @@ public class Bicidade extends Activity {
 		LocationListener mlocListener = new MyLocationListener((MapController) map.getController(), myOverlay);
 
 		mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
-
+		map.getOverlays().remove(pl);
+		pl=new PolyLine(this);
+		pl.setMap(map);
+		map.getOverlays().add(pl);
 		origem = addItemized();
 		destino = addItemized();
 		central = addItemized();
 		final IMapController c = map.getController();
 		centering = false;
-		c.setCenter(new GeoPoint(centerY, centerX));
-		c.setZoom(zoom);
+
 		tu = new MapTouchListener(this);
 		map.getOverlays().add(tu);
 		map.setBuiltInZoomControls(true);
@@ -109,11 +113,27 @@ public class Bicidade extends Activity {
 		Cursor cu = db.rawQuery("select * from settings", args);
 		while (cu.moveToNext()) {
 			String name = cu.getString(0);
-			if (name.equals("subida"))
-				subida = cu.getString(1).equals("true");
-			if (name.equals("ciclorota"))
-				ciclorota = cu.getString(1).equals("true");
+			if(name.equals("settings")){
+				try {
+					JSONObject juke=new JSONObject(cu.getString(1));
+					if(juke.has("points")) pl.setPoints(juke.getJSONArray("points"));
+					if(juke.has("subida")) subida=juke.getString("subida").equals("true");
+					if(juke.has("ciclorota")) ciclorota=juke.getString("ciclorota").equals("true");
+					if(juke.has("contramao")) contramao=juke.getString("contramao").equals("true");
+					if(juke.has("zoom")) zoom=juke.getInt("zoom");
+					if(juke.has("x")) centerX=juke.getDouble("x");
+					if(juke.has("y")) centerY=juke.getDouble("y");
+					if(juke.has("zoom")) zoom=juke.getInt("zoom");
+					if(juke.has("ox")&&juke.has("oy")) this.addMarker(new GeoPoint(juke.getDouble("oy"),juke.getDouble("ox")), R.drawable.origem, false, R.id.origem);
+					if(juke.has("dx")&&juke.has("dy")) this.addMarker(new GeoPoint(juke.getDouble("dy"),juke.getDouble("dx")), R.drawable.destino, false, R.id.destino);
+				} catch (JSONException e) {
+					Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+				}
+				
+			}
 		}
+		c.setZoom(zoom);
+		c.setCenter(new GeoPoint(centerY, centerX));
 	}
 
 	private ItemizedIconOverlay<OverlayItem> addItemized() {
@@ -200,10 +220,19 @@ public class Bicidade extends Activity {
 			saveState();
 			arrota();
 			return false;
+		case R.id.contramao:
+			contramao = !item.isChecked();
+			if (item.isChecked())
+				item.setChecked(false);
+			else
+				item.setChecked(true);
+			saveState();
+			arrota();
+			return false;
 		case R.id.remove:
 			origem.removeAllItems();
 			destino.removeAllItems();
-			// remover também a rota
+			pl.setPoints(new JSONArray());
 			((MapView) this.findViewById(R.id.mapview)).postInvalidate();
 		}
 		return false;
@@ -213,7 +242,7 @@ public class Bicidade extends Activity {
 		GeoPoint a = (origem.getItem(0)).getPoint();
 		GeoPoint b = (destino.getItem(0)).getPoint();
 		String u="http://alien9.net/route/?x0="+a.getLongitude()+"&y0="+a.getLatitude()+"&x1="+b.getLongitude()+"&y1="+b.getLatitude();
-		u+="&crit="+((subida)?"subida,":"")+((ciclorota)?"ciclorota,":"");
+		u+="&crit="+((subida)?"subida,":"")+((ciclorota)?"ciclorota,":"")+((contramao)?"":"mao,");
 		Brow bro = new Brow(this);
 		bro.execute(u);		
 	}
@@ -225,9 +254,11 @@ public class Bicidade extends Activity {
 			l = central;
 			break;
 		case 1:
+		case R.id.origem:
 			l = origem;
 			break;
 		case 2:
+		case R.id.destino:
 			l = destino;
 			break;
 		}
@@ -314,11 +345,7 @@ public class Bicidade extends Activity {
 			if(juca.has("coordinates")){
 				JSONArray points=juca.getJSONArray("coordinates");
 				MapView map = (MapView) this.findViewById(R.id.mapview);
-				map.getOverlays().remove(pl);
-				pl=new PolyLine(this);
 				pl.setPoints(points);
-				pl.setMap(map);
-				map.getOverlays().add(pl);
 				map.postInvalidate();
 			}
 		}
@@ -346,16 +373,42 @@ public class Bicidade extends Activity {
 		values.put("x", center.getLongitude());
 		values.put("y", center.getLatitude());
 		db.execSQL("delete from position");
-		db.execSQL("delete from settings");
 		db.insert("position", null, values);
-		values = new ContentValues();
-		values.put("name", "subida");
-		values.put("value", subida);
-		db.insert("settings", null, values);
-		values = new ContentValues();
-		values.put("name", "ciclorota");
-		values.put("value", ciclorota);
-		db.insert("settings", null, values);
+		
+		db.execSQL("delete from settings");
+		JSONObject joke=new JSONObject();
+		try {
+			joke.put("zoom",map.getZoomLevel());
+			joke.put("y",center.getLatitude());
+			joke.put("x",center.getLongitude());
+			GeoPoint g;
+			joke.put("points", pl.getPoints());
+			if(origem.size()>0){
+				g=origem.getItem(0).getPoint();
+				joke.put("oy", g.getLatitude());
+				joke.put("ox", g.getLongitude());
+			}
+			if(destino.size()>0){
+				g=destino.getItem(0).getPoint();
+				joke.put("dy", g.getLatitude());
+				joke.put("dx", g.getLongitude());
+			}
+			
+			joke.put("subida", subida);
+			joke.put("ciclorota", ciclorota);
+			joke.put("contramao", contramao);
+			values = new ContentValues();
+			values.put("name", "settings");
+			values.put("value", joke.toString());
+			db.insert("settings", null, values);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+
 
 	}
 
