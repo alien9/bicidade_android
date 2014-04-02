@@ -25,6 +25,12 @@ import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.ItemizedIconOverlay.OnItemGestureListener;
 import org.osmdroid.views.overlay.OverlayItem;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.hardware.SensorManager;
 import android.location.Address;
@@ -40,6 +46,7 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -47,6 +54,7 @@ import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -134,6 +142,7 @@ public class Bicidade extends Activity {
 		}
 		c.setZoom(zoom);
 		c.setCenter(new GeoPoint(centerY, centerX));
+		((ImageView) findViewById(R.id.imageView1)).setVisibility(ImageView.INVISIBLE);
 	}
 
 	private ItemizedIconOverlay<OverlayItem> addItemized() {
@@ -241,8 +250,8 @@ public class Bicidade extends Activity {
 		if((origem.size()==0)||(destino.size()==0)) return;
 		GeoPoint a = (origem.getItem(0)).getPoint();
 		GeoPoint b = (destino.getItem(0)).getPoint();
-		String u="http://alien9.net/route/?x0="+a.getLongitude()+"&y0="+a.getLatitude()+"&x1="+b.getLongitude()+"&y1="+b.getLatitude();
-		u+="&crit="+((subida)?"subida,":"")+((ciclorota)?"ciclorota,":"")+((contramao)?"":"mao,");
+		String u="http://107.20.1.5/route/?x0="+a.getLongitude()+"&y0="+a.getLatitude()+"&x1="+b.getLongitude()+"&y1="+b.getLatitude();
+		u+="&alt=1&crit="+((subida)?"subida,":"")+((ciclorota)?"ciclorota,":"")+((contramao)?"":"mao,");
 		Brow bro = new Brow(this);
 		bro.execute(u);		
 	}
@@ -341,18 +350,54 @@ public class Bicidade extends Activity {
 	public void draw(String t) {
 		try {
 			JSONObject juca=new JSONObject(t);
+			JSONArray points;
 			if(juca.has("coordinates")){
-				JSONArray points=juca.getJSONArray("coordinates");
+				points=juca.getJSONArray("coordinates");
 				MapView map = (MapView) this.findViewById(R.id.mapview);
 				pl.setPoints(points);
 				map.postInvalidate();
 			}
+			//if(juca.has("altimetrias")){
+			//	grafico(juca.getJSONArray("altimetrias"),juca.getDouble("alt"),juca.getDouble("dist"));
+			//}
 		}
 		catch (JSONException e) {
 			Toast.makeText(this, R.string.invalid_data, Toast.LENGTH_LONG).show();
 		}
 	}
-
+	public void grafico(JSONArray pts,double alt, double dist) throws JSONException {
+		DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+	    float w = displayMetrics.heightPixels-100;
+	    if(displayMetrics.heightPixels>displayMetrics.widthPixels) w=displayMetrics.widthPixels-100;
+	    Bitmap bi=Bitmap.createBitmap(Math.round(w), Math.round(w/2), Bitmap.Config.ARGB_8888);
+		Canvas ca=new Canvas(bi);
+		ca.drawColor(Color.BLUE);
+		Paint po=new Paint();
+		po.setColor(Color.RED);
+		po.setStrokeWidth(3);
+		
+		//multiplicador do X
+		float rx=(float) ((w-10)/dist);
+		// e da altura:
+		float ry=(float) ((w/2-10)/alt);
+		Path pati = new Path();
+		pati.moveTo(5, w/4); // primeiro ponto virá
+		float x=5;
+		//pati.lineTo(55, 0);
+		for(int i=0;i<pts.length();i++){
+			x+=rx*pts.getJSONArray(i).getDouble(1);
+//			pati.lineTo(x, (float) (w/2-ry*(pts.getJSONArray(i).getDouble(1)-700)));
+//			pati.moveTo(x, (float) (w/2-ry*(pts.getJSONArray(i).getDouble(1)-700)));
+			pati.lineTo(x, 88);
+			pati.moveTo(x, 88);
+			
+		}
+		Toast.makeText(this, "xis agora vale "+x, Toast.LENGTH_LONG).show();
+		
+		ca.drawPath(pati, po);
+		ImageView im=(ImageView) findViewById(R.id.imageView1);
+		im.setImageDrawable(new BitmapDrawable(getResources(), bi));
+	}
 	@Override
 	public void onPause() {
 		/*
