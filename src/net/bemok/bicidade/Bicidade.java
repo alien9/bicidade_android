@@ -41,6 +41,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
@@ -56,6 +57,7 @@ import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -159,7 +161,6 @@ public class Bicidade extends Activity {
 		}
 		c.setZoom(zoom);
 		c.setCenter(new GeoPoint(centerY, centerX));
-		
 	}
 
 	private ItemizedIconOverlay<OverlayItem> addItemized() {
@@ -379,7 +380,7 @@ public class Bicidade extends Activity {
 				map.postInvalidate();
 			}
 			if(juca.has("altimetrias")){
-				grafico(juca.getJSONArray("altimetrias"),juca.getDouble("alt"),juca.getDouble("dist"),juca.getDouble("min"));
+				grafico(juca.getJSONArray("altimetrias"),juca.getDouble("alt"),juca.getDouble("dist"),juca.getDouble("min"),juca.getDouble("max"));
 			}
 		}
 		catch (JSONException e) {
@@ -387,7 +388,7 @@ public class Bicidade extends Activity {
 		}
 		ocupado=false;
 	}
-	public void grafico(JSONArray pts,double alt, double dist, double min) throws JSONException {
+	public void grafico(JSONArray pts,double alt, double dist, double min, double max) throws JSONException {
 		DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
 	    float w = displayMetrics.heightPixels;
 	    if(displayMetrics.heightPixels>displayMetrics.widthPixels) w=displayMetrics.widthPixels;
@@ -406,7 +407,7 @@ public class Bicidade extends Activity {
 		//multiplicador do X
 		float rx=(float) ((w-20)/dist);
 		// e da altura:
-		float ry=(float) ((h-20)/alt);
+		float ry=(float) ((h-20)/(max-min));
 		Path pati = new Path();
 		float x=10;
 		pati.moveTo(x, (float)(h-ry*(pts.getJSONArray(0).getDouble(1)-min)-10)); // primeiro ponto virá aqui
