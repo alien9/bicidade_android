@@ -18,10 +18,8 @@
         android:id="@+id/imageView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/mapview"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="18dp"
-        android:layout_marginLeft="20dp"
+        android:layout_alignParentLeft="true"
         android:src="@android:drawable/title_bar" />
 
 </RelativeLayout>

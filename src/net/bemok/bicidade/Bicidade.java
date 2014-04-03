@@ -1,5 +1,6 @@
 package net.bemok.bicidade;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +27,7 @@ import org.osmdroid.views.overlay.ItemizedIconOverlay.OnItemGestureListener;
 import org.osmdroid.views.overlay.OverlayItem;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -85,6 +87,7 @@ public class Bicidade extends Activity {
 
 	private ItemizedIconOverlay<OverlayItem> central;
 	PolyLine pl;
+	boolean ocupado=false;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -96,7 +99,6 @@ public class Bicidade extends Activity {
 		ItemizedIconOverlay<OverlayItem> myOverlay = new ItemizedIconOverlay<OverlayItem>(getApplicationContext(),
 				pList, pOnItemGestureListener);
 
-		LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		LocationListener mlocListener = new MyLocationListener((MapController) map.getController(), myOverlay);
 
@@ -140,9 +142,24 @@ public class Bicidade extends Activity {
 				
 			}
 		}
+		ImageView image=(ImageView) findViewById(R.id.imageView1);
+		image.setVisibility(ImageView.INVISIBLE);
+		cu = db.rawQuery("select * from legend", args);
+		while (cu.moveToNext()) {
+			byte[] blob=cu.getBlob(0);
+			BitmapFactory.Options options = new BitmapFactory.Options();
+	        options = new BitmapFactory.Options();
+	        options.inDither = false;
+	        options.inPurgeable = true;
+	        options.inInputShareable = true;
+	        options.inTempStorage = new byte[1024 *32];
+		    Bitmap bm =   BitmapFactory.decodeByteArray(blob , 0, blob.length, options);
+		    image.setImageBitmap(bm);
+			image.setVisibility(ImageView.VISIBLE);	
+		}
 		c.setZoom(zoom);
 		c.setCenter(new GeoPoint(centerY, centerX));
-		((ImageView) findViewById(R.id.imageView1)).setVisibility(ImageView.INVISIBLE);
+		
 	}
 
 	private ItemizedIconOverlay<OverlayItem> addItemized() {
@@ -170,14 +187,13 @@ public class Bicidade extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.bicidade, menu);
 		return true;
 	}
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		menu.findItem(R.id.subida).setChecked(subida);
+		for(int i=0;i<menu.size();i++)menu.getItem(i).setEnabled(!ocupado);
 		return true;
 
 	}
@@ -239,21 +255,26 @@ public class Bicidade extends Activity {
 			arrota();
 			return false;
 		case R.id.remove:
+			
 			origem.removeAllItems();
 			destino.removeAllItems();
+			((ImageView) findViewById(R.id.imageView1)).setVisibility(ImageView.INVISIBLE);
 			pl.setPoints(new JSONArray());
 			((MapView) this.findViewById(R.id.mapview)).postInvalidate();
+			
 		}
 		return false;
 	}
 	public void arrota(){
 		if((origem.size()==0)||(destino.size()==0)) return;
+		ocupado=true;
 		GeoPoint a = (origem.getItem(0)).getPoint();
 		GeoPoint b = (destino.getItem(0)).getPoint();
-		String u="http://107.20.1.5/route/?x0="+a.getLongitude()+"&y0="+a.getLatitude()+"&x1="+b.getLongitude()+"&y1="+b.getLatitude();
+		String u="http://bicidade.net/route/?x0="+a.getLongitude()+"&y0="+a.getLatitude()+"&x1="+b.getLongitude()+"&y1="+b.getLatitude();
+		//String u="http://192.168.0.110:8000/route/?x0="+a.getLongitude()+"&y0="+a.getLatitude()+"&x1="+b.getLongitude()+"&y1="+b.getLatitude();
 		u+="&alt=1&crit="+((subida)?"subida,":"")+((ciclorota)?"ciclorota,":"")+((contramao)?"":"mao,");
 		Brow bro = new Brow(this);
-		bro.execute(u);		
+		bro.execute(u);
 	}
 
 	public void addMarker(GeoPoint p, int t, boolean geocode, int which) {
@@ -273,7 +294,7 @@ public class Bicidade extends Activity {
 			break;
 		}
 		l.removeAllItems();
-		OverlayItem olItem = new OverlayItem("Minha", "SampleDescription", p);
+		OverlayItem olItem = new OverlayItem("Ponto", "SampleDescription", p);
 		Drawable newMarker = this.getResources().getDrawable(t);
 		olItem.setMarker(newMarker);
 		l.addItem(olItem);
@@ -315,11 +336,11 @@ public class Bicidade extends Activity {
 
 		{
 
-			Toast.makeText(getApplicationContext(),
+			//Toast.makeText(getApplicationContext(),
 
-			"Gps Disabled",
+			//"Gps Disabled",
 
-			Toast.LENGTH_SHORT).show();
+			//Toast.LENGTH_SHORT).show();
 
 		}
 
@@ -357,46 +378,55 @@ public class Bicidade extends Activity {
 				pl.setPoints(points);
 				map.postInvalidate();
 			}
-			//if(juca.has("altimetrias")){
-			//	grafico(juca.getJSONArray("altimetrias"),juca.getDouble("alt"),juca.getDouble("dist"));
-			//}
+			if(juca.has("altimetrias")){
+				grafico(juca.getJSONArray("altimetrias"),juca.getDouble("alt"),juca.getDouble("dist"),juca.getDouble("min"));
+			}
 		}
 		catch (JSONException e) {
 			Toast.makeText(this, R.string.invalid_data, Toast.LENGTH_LONG).show();
 		}
+		ocupado=false;
 	}
-	public void grafico(JSONArray pts,double alt, double dist) throws JSONException {
+	public void grafico(JSONArray pts,double alt, double dist, double min) throws JSONException {
 		DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-	    float w = displayMetrics.heightPixels-100;
-	    if(displayMetrics.heightPixels>displayMetrics.widthPixels) w=displayMetrics.widthPixels-100;
-	    Bitmap bi=Bitmap.createBitmap(Math.round(w), Math.round(w/2), Bitmap.Config.ARGB_8888);
+	    float w = displayMetrics.heightPixels;
+	    if(displayMetrics.heightPixels>displayMetrics.widthPixels) w=displayMetrics.widthPixels;
+	    float h=w/3;
+		Bitmap bi=Bitmap.createBitmap(Math.round(w), Math.round(h), Bitmap.Config.ARGB_8888);
 		Canvas ca=new Canvas(bi);
-		ca.drawColor(Color.BLUE);
+		ca.drawColor(Color.WHITE);
 		Paint po=new Paint();
-		po.setColor(Color.RED);
-		po.setStrokeWidth(3);
-		
+		po.setColor(Color.GRAY);
+		po.setAntiAlias(true);
+		po.setDither(true);
+		po.setStyle(Paint.Style.STROKE);
+		po.setStrokeJoin(Paint.Join.ROUND);
+		po.setStrokeCap(Paint.Cap.ROUND);
+		po.setStrokeWidth(4);
 		//multiplicador do X
-		float rx=(float) ((w-10)/dist);
+		float rx=(float) ((w-20)/dist);
 		// e da altura:
-		float ry=(float) ((w/2-10)/alt);
+		float ry=(float) ((h-20)/alt);
 		Path pati = new Path();
-		pati.moveTo(5, w/4); // primeiro ponto virá
-		float x=5;
-		//pati.lineTo(55, 0);
+		float x=10;
+		pati.moveTo(x, (float)(h-ry*(pts.getJSONArray(0).getDouble(1)-min)-10)); // primeiro ponto virá aqui
+		
 		for(int i=0;i<pts.length();i++){
-			x+=rx*pts.getJSONArray(i).getDouble(1);
-//			pati.lineTo(x, (float) (w/2-ry*(pts.getJSONArray(i).getDouble(1)-700)));
-//			pati.moveTo(x, (float) (w/2-ry*(pts.getJSONArray(i).getDouble(1)-700)));
-			pati.lineTo(x, 88);
-			pati.moveTo(x, 88);
+			x+=rx*pts.getJSONArray(i).getDouble(0); // pega a distância
+			pati.lineTo(x, (float) (h-ry*(pts.getJSONArray(i).getDouble(1)-min)-10));
+			pati.moveTo(x, (float) (h-ry*(pts.getJSONArray(i).getDouble(1)-min)-10));
 			
 		}
-		Toast.makeText(this, "xis agora vale "+x, Toast.LENGTH_LONG).show();
-		
 		ca.drawPath(pati, po);
+		po.setStrokeWidth(0);
+		po.setColor(Color.BLACK);
+		po.setTextSize(14); 
+		ca.drawText(String.format("%.1f", min+alt)+"m", 12, 20, po); 
+		ca.drawText(String.format("%.1f", min)+"m", 12, h-10, po);
+		ca.drawText(String.format("%.1f", dist/1000)+"km", x-40, h/2+5, po);
 		ImageView im=(ImageView) findViewById(R.id.imageView1);
 		im.setImageDrawable(new BitmapDrawable(getResources(), bi));
+		im.setVisibility(ImageView.VISIBLE);
 	}
 	@Override
 	public void onPause() {
@@ -419,7 +449,6 @@ public class Bicidade extends Activity {
 		db.execSQL("delete from position");
 		db.insert("position", null, values);
 		
-		db.execSQL("delete from settings");
 		JSONObject joke=new JSONObject();
 		try {
 			joke.put("zoom",map.getZoomLevel());
@@ -437,7 +466,7 @@ public class Bicidade extends Activity {
 				joke.put("dy", g.getLatitude());
 				joke.put("dx", g.getLongitude());
 			}
-			
+			db.execSQL("delete from settings");
 			joke.put("subida", subida);
 			joke.put("ciclorota", ciclorota);
 			joke.put("contramao", contramao);
@@ -445,15 +474,22 @@ public class Bicidade extends Activity {
 			values.put("name", "settings");
 			values.put("value", joke.toString());
 			db.insert("settings", null, values);
+			
+			db.execSQL("delete from legend");
+			if ((((ImageView) findViewById(R.id.imageView1)).getVisibility()) == ImageView.VISIBLE) {
+				values = new ContentValues();
+				Bitmap bi = (Bitmap) ((BitmapDrawable) ((ImageView) findViewById(R.id.imageView1))
+						.getDrawable()).getBitmap();
+				ByteArrayOutputStream bos = new ByteArrayOutputStream();
+				bi.compress(Bitmap.CompressFormat.PNG, 100, bos);
+				byte[] bArray = bos.toByteArray();
+				values.put("image", bArray);
+				db.insert("legend", null, values);
+			}
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
-		
-
-
 	}
 
 	@Override

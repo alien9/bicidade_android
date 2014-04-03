@@ -8,7 +8,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
 	// All Static variables
 	// Database Version
-	private static final int DATABASE_VERSION = 2;
+	private static final int DATABASE_VERSION = 3;
 
 	// Database Name
 	private static final String DATABASE_NAME = "bicidade";
@@ -22,6 +22,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 	public void onCreate(SQLiteDatabase db) {
 		db.execSQL("CREATE TABLE position (id INTEGER PRIMARY KEY, zoom NUMERIC, x NUMERIC, y NUMERIC);");
 		db.execSQL("CREATE TABLE settings (name TEXT, value TEXT);");
+		db.execSQL("CREATE TABLE legend (image BLOB);");
 	}
 
 	// Upgrading database
@@ -30,6 +31,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 		// Drop older table if existed
 		db.execSQL("DROP TABLE IF EXISTS position");
 		db.execSQL("DROP TABLE IF EXISTS settings");
+		db.execSQL("DROP TABLE IF EXISTS legend");
 
 		// Create tables again
 		onCreate(db);
