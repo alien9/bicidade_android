@@ -32,19 +32,22 @@ public final class R {
         public static final int origem=0x7f020003;
     }
     public static final class id {
-        public static final int action_settings=0x7f080001;
-        public static final int center=0x7f080005;
-        public static final int ciclorota=0x7f080003;
-        public static final int contramao=0x7f080004;
-        public static final int destino=0x7f080007;
+        public static final int action_settings=0x7f080003;
+        public static final int center=0x7f080007;
+        public static final int ciclorota=0x7f080005;
+        public static final int contramao=0x7f080006;
+        public static final int destino=0x7f080009;
+        public static final int imageView1=0x7f080001;
         public static final int mapview=0x7f080000;
-        public static final int origem=0x7f080006;
-        public static final int remove=0x7f080008;
-        public static final int subida=0x7f080002;
+        public static final int origem=0x7f080008;
+        public static final int progressBar2=0x7f080002;
+        public static final int remove=0x7f08000a;
+        public static final int subida=0x7f080004;
     }
     public static final class layout {
         public static final int activity_bicidade=0x7f030000;
         public static final int fragment_bicidade=0x7f030001;
+        public static final int progress=0x7f030002;
     }
     public static final class menu {
         public static final int bicidade=0x7f070000;

@@ -59,7 +59,7 @@ public class PolyLine extends Overlay {
 			}
 			pa.setAntiAlias(true);
 			pa.setDither(true);
-			pa.setColor(Color.MAGENTA);
+			pa.setColor(Color.BLUE);
 			pa.setStyle(Paint.Style.STROKE);
 			pa.setStrokeJoin(Paint.Join.ROUND);
 			pa.setStrokeCap(Paint.Cap.ROUND);
