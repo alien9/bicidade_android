@@ -5,6 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import net.bemok.bicidade.DatabaseHandler;
+import net.bemok.bicidade.MapTouchListener;
+import net.bemok.bicidade.PolyLine;
+import net.bemok.bicidade.myItemGestureListener;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,19 +56,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class Bicidade extends Activity {
-	static int zoom = 14;
+	int zoom=14;
 
 	boolean subida = false;
 
 	boolean ciclorota = false;
-	
+
 	boolean contramao = false;
 
-	static int pos = 3;
+	double centerX = -46.6346139449423;
 
-	static double centerX = -46.6346139449423;
-
-	static double centerY = -23.5452421834264;
+	double centerY = -23.5452421834264;
 
 	boolean centering;
 
@@ -77,11 +80,32 @@ public class Bicidade extends Activity {
 
 	private ItemizedIconOverlay<OverlayItem> central;
 	PolyLine pl;
+	
+
+    private final static String DEBUG_TAG = "FirstLifeLog";
+
+    protected void onRestart() {
+        super.onRestart();
+        Log.e(DEBUG_TAG, "onRestart executes ...");
+    }
+
+    protected void onStart() {
+        super.onStart();
+        Log.e(DEBUG_TAG, "onStart executes ...");
+    }
+
+
+    protected void onStop() {
+        super.onStop();
+        Log.e(DEBUG_TAG, "onStop executes ...");
+    }
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		Log.e(DEBUG_TAG, "onCreate executes ...");
 		setContentView(R.layout.activity_bicidade);
-		final MapView map = (MapView) this.findViewById(R.id.mapview);
+		MapView map = (MapView) this.findViewById(R.id.mapview);
 		List<OverlayItem> pList = new ArrayList<OverlayItem>();
 		OnItemGestureListener<OverlayItem> pOnItemGestureListener = new myItemGestureListener<OverlayItem>();
 
@@ -90,27 +114,29 @@ public class Bicidade extends Activity {
 
 		LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		LocationListener mlocListener = new MyLocationListener((MapController) map.getController(), myOverlay);
+		LocationListener mlocListener = new MyLocationListener(this);
 
 		mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
-		map.getOverlays().remove(pl);
+		//map.getOverlays().remove(pl);
 		pl=new PolyLine(this);
 		pl.setMap(map);
 		map.getOverlays().add(pl);
+
 		origem = addItemized();
 		destino = addItemized();
 		central = addItemized();
-		final IMapController c = map.getController();
 		centering = false;
-
 		tu = new MapTouchListener(this);
 		map.getOverlays().add(tu);
 		map.setBuiltInZoomControls(true);
 		map.setMultiTouchControls(true);
 		map.setTileSource(TileSourceFactory.CYCLEMAP);
+	}
+	public void loadMapState(){
+		MapView map = (MapView) this.findViewById(R.id.mapview);
 		SQLiteDatabase db = (new DatabaseHandler(this.getApplicationContext())).getReadableDatabase();
 		String[] args = {};
-		Cursor cu = db.rawQuery("select * from settings", args);
+		Cursor cu = db.rawQuery("select name,value from settings", args);
 		while (cu.moveToNext()) {
 			String name = cu.getString(0);
 			if(name.equals("settings")){
@@ -132,6 +158,7 @@ public class Bicidade extends Activity {
 				
 			}
 		}
+		IMapController c = map.getController();
 		c.setZoom(zoom);
 		c.setCenter(new GeoPoint(centerY, centerX));
 	}
@@ -199,7 +226,9 @@ public class Bicidade extends Activity {
 			Toast.makeText(getApplicationContext(), R.string.toque_para_destino, Toast.LENGTH_LONG).show();;
 			return true;
 		case R.id.action_settings:
-		
+			item.getSubMenu().findItem(R.id.subida).setChecked(subida);
+			item.getSubMenu().findItem(R.id.ciclorota).setChecked(ciclorota);
+			item.getSubMenu().findItem(R.id.contramao).setChecked(contramao);
 			return true;
 		case R.id.subida:
 			subida = !item.isChecked();
@@ -275,13 +304,11 @@ public class Bicidade extends Activity {
 	}
 
 	public class MyLocationListener implements LocationListener {
-		private MapController mapController;
 
-		private ItemizedIconOverlay<OverlayItem> mapPoint;
+		private Context context;
 
-		public MyLocationListener(MapController controller, ItemizedIconOverlay<OverlayItem> myOverlay) {
-			this.mapController = controller;
-			this.mapPoint = myOverlay;
+		public MyLocationListener(Context context) {
+			this.context=context;
 		}
 
 		@Override
@@ -289,7 +316,7 @@ public class Bicidade extends Activity {
 
 		{
 			String Text = "My current location is: Latitud = " + loc.getLatitude() + "Longitud = " + loc.getLongitude();
-			Toast.makeText(getApplicationContext(), Text, Toast.LENGTH_SHORT).show();
+			Toast.makeText(context, Text, Toast.LENGTH_SHORT).show();
 			/*
 			 * this.mapController.setCenter(new GeoPoint(loc.getLatitude(), loc.getLongitude())); if
 			 * (this.mapPoint.size() > 0) this.mapPoint.removeItem(0); Resources res = getResources(); Drawable marker =
@@ -297,7 +324,7 @@ public class Bicidade extends Activity {
 			 * "Description of my Marker", new GeoPoint(loc.getLatitude(), loc.getLongitude()));
 			 * myItem.setMarker(marker); this.mapPoint.addItem(myItem);
 			 */
-			((Bicidade) getApplicationContext()).addMarker(new GeoPoint(loc.getLatitude(), loc.getLongitude()),
+			((Bicidade) context).addMarker(new GeoPoint(loc.getLatitude(), loc.getLongitude()),
 					R.drawable.center, false, 0);
 		}
 
@@ -327,11 +354,11 @@ public class Bicidade extends Activity {
 
 		}
 
-		@Override
+		@Override					
 		public void onStatusChanged(String provider, int status, Bundle extras)
 
 		{
-
+									
 		}
 
 	}
@@ -355,12 +382,12 @@ public class Bicidade extends Activity {
 
 	@Override
 	public void onPause() {
-		/*
-		 * GeoPoint center = (GeoPoint) map.getMapCenter(); centerX=center.getLongitude(); centerY=center.getLatitude();
-		 * zoom = map.getZoomLevel();
-		 */
 		super.onPause(); // Always call the superclass method first
 
+        Log.e(DEBUG_TAG, "onPause executes ...");
+		saveState();
+		MapView map = (MapView) this.findViewById(R.id.mapview);
+		map.destroyDrawingCache();
 	}
 
 	public void saveState() {
@@ -373,7 +400,6 @@ public class Bicidade extends Activity {
 		values.put("y", center.getLatitude());
 		db.execSQL("delete from position");
 		db.insert("position", null, values);
-		
 		db.execSQL("delete from settings");
 		JSONObject joke=new JSONObject();
 		try {
@@ -404,26 +430,23 @@ public class Bicidade extends Activity {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
-		
-
 
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+
+        Log.e(DEBUG_TAG, "onDestroy executes ...");
 		MapView map = (MapView) this.findViewById(R.id.mapview);
-		saveState();
 		map.destroyDrawingCache();
 	}
+
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		MapController c = (MapController) ((MapView) this.findViewById(R.id.mapview)).getController();
-		c.setCenter(new GeoPoint(centerY, centerX));
-		c.setZoom(zoom);
+		loadMapState();
+        Log.e(DEBUG_TAG, "onResume executes ...");
 	}
 }
