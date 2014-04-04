@@ -38,10 +38,11 @@ public final class R {
         public static final int contramao=0x7f080006;
         public static final int destino=0x7f080009;
         public static final int imageView1=0x7f080001;
+        public static final int inverter=0x7f08000a;
         public static final int mapview=0x7f080000;
         public static final int origem=0x7f080008;
         public static final int progressBar2=0x7f080002;
-        public static final int remove=0x7f08000a;
+        public static final int remove=0x7f08000b;
         public static final int subida=0x7f080004;
     }
     public static final class layout {
@@ -61,6 +62,7 @@ public final class R {
         public static final int destino=0x7f050006;
         public static final int hello_world=0x7f050002;
         public static final int invalid_data=0x7f05000b;
+        public static final int invert=0x7f05000d;
         public static final int my_location=0x7f050008;
         public static final int origem=0x7f050005;
         public static final int remove=0x7f050007;

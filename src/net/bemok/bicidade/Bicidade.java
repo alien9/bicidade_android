@@ -116,7 +116,7 @@ public class Bicidade extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.e(DEBUG_TAG, "onCreate executes ...");
+		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		setContentView(R.layout.activity_bicidade);
 		MapView map = (MapView) this.findViewById(R.id.mapview);
 		List<OverlayItem> pList = new ArrayList<OverlayItem>();
@@ -125,11 +125,10 @@ public class Bicidade extends Activity {
 		ItemizedIconOverlay<OverlayItem> myOverlay = new ItemizedIconOverlay<OverlayItem>(getApplicationContext(),
 				pList, pOnItemGestureListener);
 
-		LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		LocationListener mlocListener = new MyLocationListener(this);
+		//LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		//LocationListener mlocListener = new MyLocationListener(this);
 
-		mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
-		//map.getOverlays().remove(pl);
+		//mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
 		pl=new PolyLine(this);
 		pl.setMap(map);
 		map.getOverlays().add(pl);
@@ -143,6 +142,11 @@ public class Bicidade extends Activity {
 		map.setBuiltInZoomControls(true);
 		map.setMultiTouchControls(true);
 		map.setTileSource(TileSourceFactory.CYCLEMAP);
+		
+		//ActionBar actionBar = getActionBar();
+        //actionBar.setDisplayHomeAsUpEnabled(true);
+        //requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        //setProgressBarIndeterminateVisibility(true);
 	}
 	public void loadMapState(){
 		MapView map = (MapView) this.findViewById(R.id.mapview);
@@ -162,8 +166,8 @@ public class Bicidade extends Activity {
 					if(juke.has("x")) centerX=juke.getDouble("x");
 					if(juke.has("y")) centerY=juke.getDouble("y");
 					if(juke.has("zoom")) zoom=juke.getInt("zoom");
-					if(juke.has("ox")&&juke.has("oy")) this.addMarker(new GeoPoint(juke.getDouble("oy"),juke.getDouble("ox")), R.drawable.origem, false, R.id.origem);
-					if(juke.has("dx")&&juke.has("dy")) this.addMarker(new GeoPoint(juke.getDouble("dy"),juke.getDouble("dx")), R.drawable.destino, false, R.id.destino);
+					if(juke.has("ox")&&juke.has("oy")) this.addMarker(new GeoPoint(juke.getDouble("oy"),juke.getDouble("ox")), R.drawable.origem, false);
+					if(juke.has("dx")&&juke.has("dy")) this.addMarker(new GeoPoint(juke.getDouble("dy"),juke.getDouble("dx")), R.drawable.destino, false);
 				} catch (JSONException e) {
 					Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
 				}
@@ -222,6 +226,7 @@ public class Bicidade extends Activity {
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		for(int i=0;i<menu.size();i++)menu.getItem(i).setEnabled(!ocupado);
+		menu.findItem(R.id.inverter).setEnabled((origem.size()>0)&&(destino.size()>0));
 		return true;
 
 	}
@@ -244,12 +249,15 @@ public class Bicidade extends Activity {
 
 			return true;
 		case R.id.origem:
-			tu.setTouchListener(1);
+			tu.setTouchListener(R.id.origem);
 			Toast.makeText(getApplicationContext(), R.string.toque_para_origem, Toast.LENGTH_LONG).show();
 			return true;
 		case R.id.destino:
-			tu.setTouchListener(2);
+			tu.setTouchListener(R.id.destino);
 			Toast.makeText(getApplicationContext(), R.string.toque_para_destino, Toast.LENGTH_LONG).show();;
+			return true;
+		case R.id.inverter:
+			this.inverte();
 			return true;
 		case R.id.action_settings:
 			item.getSubMenu().findItem(R.id.subida).setChecked(subida);
@@ -286,15 +294,29 @@ public class Bicidade extends Activity {
 			return false;
 		case R.id.remove:
 			
-			origem.removeAllItems();
-			destino.removeAllItems();
-			((ImageView) findViewById(R.id.imageView1)).setVisibility(ImageView.INVISIBLE);
-			pl.setPoints(new JSONArray());
-			((MapView) this.findViewById(R.id.mapview)).postInvalidate();
+			cleanMap();
 			
 		}
 		return false;
 	}
+	private void cleanMap() {
+		origem.removeAllItems();
+		destino.removeAllItems();
+		((ImageView) findViewById(R.id.imageView1)).setVisibility(ImageView.INVISIBLE);
+		pl.setPoints(new JSONArray());
+		((MapView) this.findViewById(R.id.mapview)).postInvalidate();
+	}
+
+	private void inverte() {
+		if((origem.size()==0)||(destino.size()==0)) return;
+		GeoPoint a = (origem.getItem(0)).getPoint();
+		GeoPoint b = (destino.getItem(0)).getPoint();
+		cleanMap();
+		addMarker(a,R.id.destino,true);
+		addMarker(b,R.id.origem,true);
+		arrota();
+	}
+
 	public void arrota(){
 		if((origem.size()==0)||(destino.size()==0)) return;
 		ocupado=true;
@@ -305,22 +327,27 @@ public class Bicidade extends Activity {
 		u+="&alt=1&crit="+((subida)?"subida,":"")+((ciclorota)?"ciclorota,":"")+((contramao)?"":"mao,");
 		Brow bro = new Brow(this);
 		bro.execute(u);
+		setProgressBarIndeterminateVisibility(true);
 	}
 
-	public void addMarker(GeoPoint p, int t, boolean geocode, int which) {
+	public void addMarker(GeoPoint p, int which, boolean geocode) {
 		ItemizedIconOverlay<OverlayItem> l = null;
+		int t=R.drawable.center;
 		switch (which) {
 		case 0: // central
 		case R.id.center:
 			l = central;
+			t=R.drawable.center;
 			break;
 		case 1:
 		case R.id.origem:
 			l = origem;
+			t=R.drawable.origem;
 			break;
 		case 2:
 		case R.id.destino:
 			l = destino;
+			t=R.drawable.destino;
 			break;
 		}
 		l.removeAllItems();
@@ -356,7 +383,7 @@ public class Bicidade extends Activity {
 			 * myItem.setMarker(marker); this.mapPoint.addItem(myItem);
 			 */
 			((Bicidade) context).addMarker(new GeoPoint(loc.getLatitude(), loc.getLongitude()),
-					R.drawable.center, false, 0);
+					R.drawable.center, false);
 		}
 
 		@Override
@@ -414,6 +441,7 @@ public class Bicidade extends Activity {
 			Toast.makeText(this, R.string.invalid_data, Toast.LENGTH_LONG).show();
 		}
 		ocupado=false;
+		setProgressBarIndeterminateVisibility(false);
 	}
 	public void grafico(JSONArray pts,double alt, double dist, double min, double max) throws JSONException {
 		DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
