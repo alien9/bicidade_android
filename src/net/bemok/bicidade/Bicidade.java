@@ -1,27 +1,17 @@
 package net.bemok.bicidade;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.osmdroid.DefaultResourceProxyImpl;
-import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
-import org.osmdroid.api.Marker;
-import org.osmdroid.events.DelayedMapListener;
-import org.osmdroid.events.MapListener;
-import org.osmdroid.events.ScrollEvent;
-import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapController;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.MapView.Projection;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.ItemizedIconOverlay.OnItemGestureListener;
 import org.osmdroid.views.overlay.OverlayItem;
@@ -34,9 +24,6 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.hardware.SensorManager;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -272,7 +259,7 @@ public class Bicidade extends Activity {
 		GeoPoint a = (origem.getItem(0)).getPoint();
 		GeoPoint b = (destino.getItem(0)).getPoint();
 		String u="http://bicidade.net/route/?x0="+a.getLongitude()+"&y0="+a.getLatitude()+"&x1="+b.getLongitude()+"&y1="+b.getLatitude();
-		//String u="http://192.168.0.110:8000/route/?x0="+a.getLongitude()+"&y0="+a.getLatitude()+"&x1="+b.getLongitude()+"&y1="+b.getLatitude();
+		//String u="http://192.168.0.2:8000/route/?x0="+a.getLongitude()+"&y0="+a.getLatitude()+"&x1="+b.getLongitude()+"&y1="+b.getLatitude();
 		u+="&alt=1&crit="+((subida)?"subida,":"")+((ciclorota)?"ciclorota,":"")+((contramao)?"":"mao,");
 		Brow bro = new Brow(this);
 		bro.execute(u);
@@ -410,12 +397,19 @@ public class Bicidade extends Activity {
 		float ry=(float) ((h-20)/(max-min));
 		Path pati = new Path();
 		float x=10;
-		pati.moveTo(x, (float)(h-ry*(pts.getJSONArray(0).getDouble(1)-min)-10)); // primeiro ponto virá aqui
+		float y=(float)(h-ry*(pts.getJSONArray(0).getDouble(1)-min)-10);
+		pati.moveTo(x, y); // primeiro ponto virá aqui
 		
 		for(int i=0;i<pts.length();i++){
+			float x0=x;
+			float y0=y;
 			x+=rx*pts.getJSONArray(i).getDouble(0); // pega a distância
-			pati.lineTo(x, (float) (h-ry*(pts.getJSONArray(i).getDouble(1)-min)-10));
-			pati.moveTo(x, (float) (h-ry*(pts.getJSONArray(i).getDouble(1)-min)-10));
+			y=(float) (h-ry*(pts.getJSONArray(i).getDouble(1)-min)-10);
+			//pati.lineTo(x, y);
+			//pati.quadTo(x0,y0,x, y);//, x0+(x-x0)/2, y0+(y-y0)/2);
+			pati.quadTo((x+x0)/2, (y+y0)/2, x,y);
+			//pati.quadTo(x, y, x0+(x-x0)/2, y0+(y-y0)/2);
+			pati.moveTo(x, y);
 			
 		}
 		ca.drawPath(pati, po);
