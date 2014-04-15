@@ -39,8 +39,8 @@ public class MapTouchListener extends Overlay {
 			/*Toast.makeText(getBaseContext(),
 					p.getLatitudeE6() / 1E6 + "," + p.getLongitudeE6() / 1E6 + " Action is : " + event.getAction()+" listener = "+touchlistener,
 					Toast.LENGTH_SHORT).show();*/
-			int t=(touchlistener==1)? R.drawable.origem : R.drawable.destino;
-			((Bicidade) getBaseContext()).addMarker(p, t, true, touchlistener);
+			//int t=(touchlistener==1)? R.drawable.origem : R.drawable.destino;
+			((Bicidade) getBaseContext()).addMarker(p, touchlistener, true);
 			touchlistener = 0;
 			
 		}

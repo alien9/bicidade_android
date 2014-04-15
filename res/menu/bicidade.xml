@@ -27,9 +27,10 @@
         android:id="@+id/destino"
         android:title="@string/destino">
     </item>
-    <item
+    <item android:id="@+id/inverter" android:title="@string/invert"></item><item
         android:id="@+id/remove"
         android:title="@string/remove">
     </item>
+    
 
 </menu>

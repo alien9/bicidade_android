@@ -3,6 +3,16 @@ package net.bemok.bicidade;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+<<<<<<< HEAD
+=======
+import java.util.Locale;
+
+import net.bemok.bicidade.DatabaseHandler;
+import net.bemok.bicidade.MapTouchListener;
+import net.bemok.bicidade.PolyLine;
+import net.bemok.bicidade.myItemGestureListener;
+
+>>>>>>> ff26a99b6a6e3e26bbb994d84e864ecd14a13a83
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,19 +60,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class Bicidade extends Activity {
-	static int zoom = 14;
+	int zoom=14;
 
 	boolean subida = false;
 
 	boolean ciclorota = false;
-	
+
 	boolean contramao = false;
 
-	static int pos = 3;
+	double centerX = -46.6346139449423;
 
-	static double centerX = -46.6346139449423;
-
-	static double centerY = -23.5452421834264;
+	double centerY = -23.5452421834264;
 
 	boolean centering;
 
@@ -76,40 +84,67 @@ public class Bicidade extends Activity {
 
 	private ItemizedIconOverlay<OverlayItem> central;
 	PolyLine pl;
+	
+
+    private final static String DEBUG_TAG = "FirstLifeLog";
+
+    protected void onRestart() {
+        super.onRestart();
+        Log.e(DEBUG_TAG, "onRestart executes ...");
+    }
+
+    protected void onStart() {
+        super.onStart();
+        Log.e(DEBUG_TAG, "onStart executes ...");
+    }
+
+
+    protected void onStop() {
+        super.onStop();
+        Log.e(DEBUG_TAG, "onStop executes ...");
+    }
+
 	boolean ocupado=false;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		setContentView(R.layout.activity_bicidade);
-		final MapView map = (MapView) this.findViewById(R.id.mapview);
+		MapView map = (MapView) this.findViewById(R.id.mapview);
 		List<OverlayItem> pList = new ArrayList<OverlayItem>();
 		OnItemGestureListener<OverlayItem> pOnItemGestureListener = new myItemGestureListener<OverlayItem>();
 
 		ItemizedIconOverlay<OverlayItem> myOverlay = new ItemizedIconOverlay<OverlayItem>(getApplicationContext(),
 				pList, pOnItemGestureListener);
 
-		LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		LocationListener mlocListener = new MyLocationListener((MapController) map.getController(), myOverlay);
+		//LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		//LocationListener mlocListener = new MyLocationListener(this);
 
-		mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
-		map.getOverlays().remove(pl);
+		//mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
 		pl=new PolyLine(this);
 		pl.setMap(map);
 		map.getOverlays().add(pl);
+
 		origem = addItemized();
 		destino = addItemized();
 		central = addItemized();
-		final IMapController c = map.getController();
 		centering = false;
-
 		tu = new MapTouchListener(this);
 		map.getOverlays().add(tu);
 		map.setBuiltInZoomControls(true);
 		map.setMultiTouchControls(true);
 		map.setTileSource(TileSourceFactory.CYCLEMAP);
+		
+		//ActionBar actionBar = getActionBar();
+        //actionBar.setDisplayHomeAsUpEnabled(true);
+        //requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        //setProgressBarIndeterminateVisibility(true);
+	}
+	public void loadMapState(){
+		MapView map = (MapView) this.findViewById(R.id.mapview);
 		SQLiteDatabase db = (new DatabaseHandler(this.getApplicationContext())).getReadableDatabase();
 		String[] args = {};
-		Cursor cu = db.rawQuery("select * from settings", args);
+		Cursor cu = db.rawQuery("select name,value from settings", args);
 		while (cu.moveToNext()) {
 			String name = cu.getString(0);
 			if(name.equals("settings")){
@@ -123,14 +158,15 @@ public class Bicidade extends Activity {
 					if(juke.has("x")) centerX=juke.getDouble("x");
 					if(juke.has("y")) centerY=juke.getDouble("y");
 					if(juke.has("zoom")) zoom=juke.getInt("zoom");
-					if(juke.has("ox")&&juke.has("oy")) this.addMarker(new GeoPoint(juke.getDouble("oy"),juke.getDouble("ox")), R.drawable.origem, false, R.id.origem);
-					if(juke.has("dx")&&juke.has("dy")) this.addMarker(new GeoPoint(juke.getDouble("dy"),juke.getDouble("dx")), R.drawable.destino, false, R.id.destino);
+					if(juke.has("ox")&&juke.has("oy")) this.addMarker(new GeoPoint(juke.getDouble("oy"),juke.getDouble("ox")), R.drawable.origem, false);
+					if(juke.has("dx")&&juke.has("dy")) this.addMarker(new GeoPoint(juke.getDouble("dy"),juke.getDouble("dx")), R.drawable.destino, false);
 				} catch (JSONException e) {
 					Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
 				}
 				
 			}
 		}
+		IMapController c = map.getController();
 		ImageView image=(ImageView) findViewById(R.id.imageView1);
 		image.setVisibility(ImageView.INVISIBLE);
 		cu = db.rawQuery("select * from legend", args);
@@ -182,6 +218,7 @@ public class Bicidade extends Activity {
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		for(int i=0;i<menu.size();i++)menu.getItem(i).setEnabled(!ocupado);
+		menu.findItem(R.id.inverter).setEnabled((origem.size()>0)&&(destino.size()>0));
 		return true;
 
 	}
@@ -204,15 +241,20 @@ public class Bicidade extends Activity {
 
 			return true;
 		case R.id.origem:
-			tu.setTouchListener(1);
+			tu.setTouchListener(R.id.origem);
 			Toast.makeText(getApplicationContext(), R.string.toque_para_origem, Toast.LENGTH_LONG).show();
 			return true;
 		case R.id.destino:
-			tu.setTouchListener(2);
+			tu.setTouchListener(R.id.destino);
 			Toast.makeText(getApplicationContext(), R.string.toque_para_destino, Toast.LENGTH_LONG).show();;
 			return true;
+		case R.id.inverter:
+			this.inverte();
+			return true;
 		case R.id.action_settings:
-		
+			item.getSubMenu().findItem(R.id.subida).setChecked(subida);
+			item.getSubMenu().findItem(R.id.ciclorota).setChecked(ciclorota);
+			item.getSubMenu().findItem(R.id.contramao).setChecked(contramao);
 			return true;
 		case R.id.subida:
 			subida = !item.isChecked();
@@ -244,15 +286,29 @@ public class Bicidade extends Activity {
 			return false;
 		case R.id.remove:
 			
-			origem.removeAllItems();
-			destino.removeAllItems();
-			((ImageView) findViewById(R.id.imageView1)).setVisibility(ImageView.INVISIBLE);
-			pl.setPoints(new JSONArray());
-			((MapView) this.findViewById(R.id.mapview)).postInvalidate();
+			cleanMap();
 			
 		}
 		return false;
 	}
+	private void cleanMap() {
+		origem.removeAllItems();
+		destino.removeAllItems();
+		((ImageView) findViewById(R.id.imageView1)).setVisibility(ImageView.INVISIBLE);
+		pl.setPoints(new JSONArray());
+		((MapView) this.findViewById(R.id.mapview)).postInvalidate();
+	}
+
+	private void inverte() {
+		if((origem.size()==0)||(destino.size()==0)) return;
+		GeoPoint a = (origem.getItem(0)).getPoint();
+		GeoPoint b = (destino.getItem(0)).getPoint();
+		cleanMap();
+		addMarker(a,R.id.destino,true);
+		addMarker(b,R.id.origem,true);
+		arrota();
+	}
+
 	public void arrota(){
 		if((origem.size()==0)||(destino.size()==0)) return;
 		ocupado=true;
@@ -263,22 +319,27 @@ public class Bicidade extends Activity {
 		u+="&alt=1&crit="+((subida)?"subida,":"")+((ciclorota)?"ciclorota,":"")+((contramao)?"":"mao,");
 		Brow bro = new Brow(this);
 		bro.execute(u);
+		setProgressBarIndeterminateVisibility(true);
 	}
 
-	public void addMarker(GeoPoint p, int t, boolean geocode, int which) {
+	public void addMarker(GeoPoint p, int which, boolean geocode) {
 		ItemizedIconOverlay<OverlayItem> l = null;
+		int t=R.drawable.center;
 		switch (which) {
 		case 0: // central
 		case R.id.center:
 			l = central;
+			t=R.drawable.center;
 			break;
 		case 1:
 		case R.id.origem:
 			l = origem;
+			t=R.drawable.origem;
 			break;
 		case 2:
 		case R.id.destino:
 			l = destino;
+			t=R.drawable.destino;
 			break;
 		}
 		l.removeAllItems();
@@ -293,13 +354,11 @@ public class Bicidade extends Activity {
 	}
 
 	public class MyLocationListener implements LocationListener {
-		private MapController mapController;
 
-		private ItemizedIconOverlay<OverlayItem> mapPoint;
+		private Context context;
 
-		public MyLocationListener(MapController controller, ItemizedIconOverlay<OverlayItem> myOverlay) {
-			this.mapController = controller;
-			this.mapPoint = myOverlay;
+		public MyLocationListener(Context context) {
+			this.context=context;
 		}
 
 		@Override
@@ -307,7 +366,7 @@ public class Bicidade extends Activity {
 
 		{
 			String Text = "My current location is: Latitud = " + loc.getLatitude() + "Longitud = " + loc.getLongitude();
-			Toast.makeText(getApplicationContext(), Text, Toast.LENGTH_SHORT).show();
+			Toast.makeText(context, Text, Toast.LENGTH_SHORT).show();
 			/*
 			 * this.mapController.setCenter(new GeoPoint(loc.getLatitude(), loc.getLongitude())); if
 			 * (this.mapPoint.size() > 0) this.mapPoint.removeItem(0); Resources res = getResources(); Drawable marker =
@@ -315,8 +374,8 @@ public class Bicidade extends Activity {
 			 * "Description of my Marker", new GeoPoint(loc.getLatitude(), loc.getLongitude()));
 			 * myItem.setMarker(marker); this.mapPoint.addItem(myItem);
 			 */
-			((Bicidade) getApplicationContext()).addMarker(new GeoPoint(loc.getLatitude(), loc.getLongitude()),
-					R.drawable.center, false, 0);
+			((Bicidade) context).addMarker(new GeoPoint(loc.getLatitude(), loc.getLongitude()),
+					R.drawable.center, false);
 		}
 
 		@Override
@@ -345,11 +404,11 @@ public class Bicidade extends Activity {
 
 		}
 
-		@Override
+		@Override					
 		public void onStatusChanged(String provider, int status, Bundle extras)
 
 		{
-
+									
 		}
 
 	}
@@ -374,6 +433,7 @@ public class Bicidade extends Activity {
 			Toast.makeText(this, R.string.invalid_data, Toast.LENGTH_LONG).show();
 		}
 		ocupado=false;
+		setProgressBarIndeterminateVisibility(false);
 	}
 	public void grafico(JSONArray pts,double alt, double dist, double min, double max) throws JSONException {
 		DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
@@ -425,12 +485,12 @@ public class Bicidade extends Activity {
 	}
 	@Override
 	public void onPause() {
-		/*
-		 * GeoPoint center = (GeoPoint) map.getMapCenter(); centerX=center.getLongitude(); centerY=center.getLatitude();
-		 * zoom = map.getZoomLevel();
-		 */
 		super.onPause(); // Always call the superclass method first
 
+        Log.e(DEBUG_TAG, "onPause executes ...");
+		saveState();
+		MapView map = (MapView) this.findViewById(R.id.mapview);
+		map.destroyDrawingCache();
 	}
 
 	public void saveState() {
@@ -443,7 +503,7 @@ public class Bicidade extends Activity {
 		values.put("y", center.getLatitude());
 		db.execSQL("delete from position");
 		db.insert("position", null, values);
-		
+		db.execSQL("delete from settings");
 		JSONObject joke=new JSONObject();
 		try {
 			joke.put("zoom",map.getZoomLevel());
@@ -490,16 +550,17 @@ public class Bicidade extends Activity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+
+        Log.e(DEBUG_TAG, "onDestroy executes ...");
 		MapView map = (MapView) this.findViewById(R.id.mapview);
-		saveState();
 		map.destroyDrawingCache();
 	}
+
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		MapController c = (MapController) ((MapView) this.findViewById(R.id.mapview)).getController();
-		c.setCenter(new GeoPoint(centerY, centerX));
-		c.setZoom(zoom);
+		loadMapState();
+        Log.e(DEBUG_TAG, "onResume executes ...");
 	}
 }
