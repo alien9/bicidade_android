@@ -1,5 +1,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-
+    <item
+        android:id="@+id/signin"
+        android:title="@string/signin">
+    </item>
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
@@ -12,7 +15,8 @@
                 android:enabled="true"
                 android:title="@string/avoid_slope"/>
             <item android:id="@+id/ciclorota" android:title="@string/ciclorota" android:checkable="true"/>
-        <item android:id="@+id/contramao" android:title="@string/wrong_way" android:checkable="true"/>
+        	<item android:id="@+id/contramao" android:title="@string/wrong_way" android:checkable="true"/>
+        	<item android:id="@+id/trackme" android:title="@string/trackme" android:checkable="true" />
         </menu>
     </item>
     <item

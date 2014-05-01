@@ -15,5 +15,9 @@
     <string name="invalid_data">Dados inválidos</string>
    <string name="wrong_way">Permitir contramão</string>
    <string name="invert">Inverter</string>
-   
+      <string name="google">google id</string>
+      <string name="signin">Entrar no Bicidade</string>
+      <string name="facebook">facebook</string>
+      <string name="twitter">twitter</string>
+      <string name="trackme">Registrar rota anonimamente</string>
 </resources>
