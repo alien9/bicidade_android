@@ -42,9 +42,11 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
@@ -58,6 +60,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.OrientationEventListener;
 import android.view.Window;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 public class Bicidade extends Activity implements ConnectionCallbacks,
@@ -136,7 +139,12 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 	private LocationManager mlocManager;
 
 	private MyLocationListener mlocListener;
-
+	
+	private int source_id;
+	private int target_id;
+	private double source_pos;
+	private double target_pos;
+	
 
 	@SuppressLint("NewApi")
 	@Override
@@ -287,6 +295,7 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 					options);
 			image.setImageBitmap(bm);
 			image.setVisibility(ImageView.VISIBLE);
+			map.setBuiltInZoomControls(false);
 		}
 		c.setZoom(zoom);
 		c.setCenter(new GeoPoint(centerY, centerX));
@@ -433,7 +442,7 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 		if (prefs.getBoolean(TRACKME, true)) {
 			mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
-			Toast.makeText(getBaseContext(), "Ligando gps", Toast.LENGTH_LONG);
+			Toast.makeText(getBaseContext(), "Ligando gps", Toast.LENGTH_LONG).show();
 			uploadTracks();
 		}else{
 			mlocManager.removeUpdates(mlocListener);
@@ -443,12 +452,16 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 	}
 
 	private void cleanMap() {
+		source_id=0;
+		target_id=0;
 		origem.removeAllItems();
 		destino.removeAllItems();
 		((ImageView) findViewById(R.id.imageView1))
 				.setVisibility(ImageView.INVISIBLE);
 		pl.setPoints(new JSONArray());
-		((MapView) this.findViewById(R.id.mapview)).postInvalidate();
+		MapView map=((MapView) this.findViewById(R.id.mapview));
+		map.postInvalidate();			
+		map.setBuiltInZoomControls(true);
 	}
 
 	private void inverte() {
@@ -459,25 +472,39 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 		cleanMap();
 		addMarker(a, R.id.destino, true);
 		addMarker(b, R.id.origem, true);
-		arrota();
 	}
 
 	public void arrota() {
 		if ((origem.size() == 0) || (destino.size() == 0))
 			return;
+		if(!((source_id>0)&&(target_id>0)))return;
 		ocupado = true;
 		GeoPoint a = (origem.getItem(0)).getPoint();
 		GeoPoint b = (destino.getItem(0)).getPoint();
-		String u="http://"+DOMAIN+"/route/?x0="+a.getLongitude()+"&y0="+a.getLatitude()+"&x1="+b.getLongitude()+"&y1="+b.getLatitude();
+		
+		String u="http://"+DOMAIN+"/route/?w0="+source_id+"&w1="+target_id+"&p0="+source_pos+"&p1="+target_pos+"&x0="+a.getLongitude()+"&y0="+a.getLatitude()+"&x1="+b.getLongitude()+"&y1="+b.getLatitude();
 		u += "&alt=1&crit=" + ((subida) ? "subida," : "")
 				+ ((ciclorota) ? "ciclorota," : "")
 				+ ((contramao) ? "" : "mao,");
-		Brow bro = new Brow(this);
-		bro.execute(u);
+		AsyncHttpClient bro = new AsyncHttpClient();
+		final Bicidade bicidade = this;
+		bro.get(u, new AsyncHttpResponseHandler(){
+			@Override
+			public void onSuccess(String s) {
+				bicidade.draw(s);
+				setProgressBarIndeterminateVisibility(false);
+			}
+			@Override
+	         public void onFailure(Throwable e, String response) {
+	             Toast.makeText(getBaseContext(), R.string.server_error, Toast.LENGTH_LONG).show();
+	             setProgressBarIndeterminateVisibility(false);
+	             ocupado=false;
+	         }
+		});
 		setProgressBarIndeterminateVisibility(true);
 	}
 
-	public void addMarker(GeoPoint p, int which, boolean geocode) {
+	public void addMarker(GeoPoint p, int which, boolean reverse_geocode) {
 		ItemizedIconOverlay<OverlayItem> l = null;
 		int t = R.drawable.center;
 		switch (which) {
@@ -503,7 +530,36 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 		olItem.setMarker(newMarker);
 		l.addItem(olItem);
 		((MapView) this.findViewById(R.id.mapview)).postInvalidate();
-		if (geocode) {
+		if(reverse_geocode){
+			final Bicidade bicidade = this;
+			final int layer=which;
+			AsyncHttpClient bowser = new AsyncHttpClient();
+			bowser.get("http://"+DOMAIN+"/reverse_geocode/?x="+p.getLongitude()+"&y="+p.getLatitude(), new AsyncHttpResponseHandler(){
+				@Override
+				public void onSuccess(String ss) {
+					try {
+						JSONObject j = new JSONObject(ss);
+						switch(layer){
+						case R.id.origem:
+							bicidade.source_id=j.getInt("id");
+							bicidade.source_pos=j.getDouble("position");
+							break;
+						case R.id.destino:
+							bicidade.target_id=j.getInt("id");
+							bicidade.target_pos=j.getDouble("position");
+							break;
+						}
+						bicidade.addMarker(new GeoPoint(j.getDouble("y"),j.getDouble("x")), layer, false);
+					} catch (JSONException e) {
+						Toast.makeText(getBaseContext(), R.string.server_error, Toast.LENGTH_LONG).show();
+					}
+				}
+				@Override
+		         public void onFailure(Throwable e, String response) {
+		             Toast.makeText(getBaseContext(), R.string.not_found, Toast.LENGTH_LONG).show();
+		         }
+			});
+		}else{
 			arrota();
 		}
 	}
@@ -519,6 +575,7 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 				MapView map = (MapView) this.findViewById(R.id.mapview);
 				pl.setPoints(points);
 				map.postInvalidate();
+				map.setBuiltInZoomControls(false);
 			}
 			if (juca.has("altimetrias")) {
 				grafico(juca.getJSONArray("altimetrias"),
@@ -533,6 +590,7 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 		setProgressBarIndeterminateVisibility(false);
 	}
 
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public void grafico(JSONArray pts, double alt, double dist, double min,
 			double max) throws JSONException {
 		DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
@@ -595,6 +653,11 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 		ImageView im = (ImageView) findViewById(R.id.imageView1);
 		im.setImageDrawable(new BitmapDrawable(getResources(), bi));
 		im.setVisibility(ImageView.VISIBLE);
+		//im.setOnDragListener(new Drag());
+		FrameLayout la=(FrameLayout) findViewById(R.id.grafic);
+		
+		la.setOnDragListener(new Drag(pati));
+		la.setOnTouchListener(new Touchy(pts,rx,ry));
 	}
 
 	@Override

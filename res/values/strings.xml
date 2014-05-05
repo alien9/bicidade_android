@@ -20,4 +20,7 @@
       <string name="facebook">facebook</string>
       <string name="twitter">twitter</string>
       <string name="trackme">Registrar rota anonimamente</string>
+      <string name="server_error">Erro de servidor</string>
+      <string name="not_found">Ponto não encontrado</string>
+      
 </resources>

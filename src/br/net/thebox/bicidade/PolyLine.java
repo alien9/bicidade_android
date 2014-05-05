@@ -63,18 +63,21 @@ public class PolyLine extends Overlay {
 			pa.setStrokeJoin(Paint.Join.ROUND);
 			pa.setStrokeCap(Paint.Cap.ROUND);
 			pa.setStrokeWidth(10);
-			
-			for (int i = 1; i < this.points.length(); i++) {
+			pa.setColor(Color.argb(75, 0, 0, 0));
+			for (int i = 0; i < this.points.length(); i++) {
 				pg = this.points.getJSONArray(i);
 				p.toPixels(new GeoPoint(pg.getDouble(1), pg.getDouble(0)), pt);
 				String ju=pg.getString(2);
-				if(!bicycle.equals(ju)||(i==this.points.length()-1)){
+				//if(!bicycle.equals(ju)||(i==this.points.length()-1)){
+				if(!bicycle.equals(ju)){
 					if(bicycle.equals(""))
-						pa.setColor(Color.argb(50, 30, 30, 30));
+						pa.setColor(Color.argb(75, 0, 0, 0));
 					if(bicycle.equals("path"))
 						pa.setColor(Color.argb(50, 0, 255, 0));
 					if(bicycle.equals("yes"))
 						pa.setColor(Color.argb(50, 40, 50, 255));
+					if(bicycle.equals("ponte"))
+						pa.setColor(Color.argb(50, 255, 0, 0));
 					
 					canvas.drawPath(pts, pa);
 					pts.rewind();
@@ -83,9 +86,9 @@ public class PolyLine extends Overlay {
 					bicycle=ju;
 				}
 				pts.lineTo(pt.x, pt.y);
-				
+				pts.moveTo(pt.x, pt.y);
 			}
-			pa.setColor(Color.argb(50, 0, 40, 255));
+			pa.setColor(Color.argb(75, 0, 0, 0));
 			canvas.drawPath(pts, pa);
 			pts.reset();
 		}
