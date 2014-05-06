@@ -12,11 +12,6 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.ImageButton;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 public class CustomDialog extends Dialog{
 	public CustomDialog(Context context, int theme) {
 		super(context, theme);
@@ -27,13 +22,6 @@ public class CustomDialog extends Dialog{
 			this.setTitle(R.string.signin);
 
 		show();
-		((com.google.android.gms.common.SignInButton) findViewById(R.id.sign_in_button)).setOnClickListener(new View.OnClickListener(){
-			@Override
-			public void onClick(View v) {
-				((Bicidade) c).googleConnect();
-				dismiss();
-			}
-		});
 		
 
 		((ImageButton) findViewById(R.id.facebook)).setOnTouchListener(new OnTouchListener(){

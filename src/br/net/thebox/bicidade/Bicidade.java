@@ -1,6 +1,7 @@
 package br.net.thebox.bicidade;
 
 import java.io.ByteArrayOutputStream;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -19,11 +20,6 @@ import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.ItemizedIconOverlay.OnItemGestureListener;
 import org.osmdroid.views.overlay.OverlayItem;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.plus.Plus;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.PersistentCookieStore;
@@ -59,12 +55,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.OrientationEventListener;
+import android.view.View;
 import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
-public class Bicidade extends Activity implements ConnectionCallbacks,
-		OnConnectionFailedListener {
+public class Bicidade extends Activity{
 	int zoom = 14;
 
 	boolean subida = false;
@@ -92,15 +88,15 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 
 //development
 	 
-	static String TWITTER_CONSUMER_KEY = "duNqceMeYKUm7bzrEtaKSbls8";
-	static String TWITTER_CONSUMER_SECRET = "AO96wm8wk75WTm6hnP1AqWViYIEwWbH6HXQ3SM8STPZ6YRI6bQ";
-	static final String DOMAIN="192.168.0.2:8000";
+//	static String TWITTER_CONSUMER_KEY = "duNqceMeYKUm7bzrEtaKSbls8";
+//	static String TWITTER_CONSUMER_SECRET = "AO96wm8wk75WTm6hnP1AqWViYIEwWbH6HXQ3SM8STPZ6YRI6bQ";
+//	static final String DOMAIN="192.168.0.2:8000";
 	
 //production
 
-//	static final String TWITTER_CONSUMER_KEY = "msu2BJQAQxMYoZy62punKMdex";
-//	static final String TWITTER_CONSUMER_SECRET = "PWyq8kiK7KyLOGNKLqCDtPY6aBbzLX3Tib87nrOF3rCE1lbDjB";
-//	static final String DOMAIN="bicidade.com.br";
+	static final String TWITTER_CONSUMER_KEY = "msu2BJQAQxMYoZy62punKMdex";
+	static final String TWITTER_CONSUMER_SECRET = "PWyq8kiK7KyLOGNKLqCDtPY6aBbzLX3Tib87nrOF3rCE1lbDjB";
+	static final String DOMAIN="bicidade.com.br";
 	
 	
 	// Preference Constants
@@ -124,15 +120,8 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 
 	protected static final String TWITTER_TOKEN = "Twitter";
 
-	protected void onStop() {
-		super.onStop();
-		if (((GoogleApiClient) mGoogleApiClient).isConnected()) {
-			((GoogleApiClient) mGoogleApiClient).disconnect();
-		}
-	}
 
 	boolean ocupado = false;
-	private GoogleApiClient mGoogleApiClient;
 
 	private ConnectivityManager connManager;
 
@@ -175,11 +164,7 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 		map.setMultiTouchControls(true);
 		map.setTileSource(TileSourceFactory.CYCLEMAP);
 
-		mGoogleApiClient = new GoogleApiClient.Builder(this)
-				.addConnectionCallbacks(this)
-				.addOnConnectionFailedListener(this).addApi(Plus.API, null)
-				.addScope(Plus.SCOPE_PLUS_LOGIN)
-				.addScope(Plus.SCOPE_PLUS_PROFILE).build();
+
 		SharedPreferences mSharedPreferences = getApplicationContext().getSharedPreferences(
 				"MyPref", 0);
 		if(this.getIntent().hasExtra("provider"))
@@ -235,9 +220,30 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 	public void loadMapState() {
 		MapView map = (MapView) this.findViewById(R.id.mapview);
 		if(map==null) return;
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+
+		String pref=prefs.getString("settings", "");
+		try {
+			JSONObject ju=new JSONObject(pref);
+			subida=ju.getBoolean("subida");
+			ciclorota=ju.getBoolean("ciclorota");
+			contramao=ju.getBoolean("contramao");
+			source_id=ju.getInt("source_id");
+			target_id=ju.getInt("target_id");
+			source_pos=ju.getDouble("source_pos");
+			target_pos=ju.getDouble("target_pos");
+			
+		}
+		catch (JSONException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		pl = new PolyLine(this);
 		pl.setMap(map);
 		map.getOverlays().add(pl);
+		
+		
+		
 		SQLiteDatabase db = (new DatabaseHandler(getBaseContext())).getReadableDatabase();
 		String[] args = {};
 		Cursor cu = db.rawQuery("select name,value from settings", args);
@@ -304,6 +310,69 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
             .permitAll().build();
 		    StrictMode.setThreadPolicy(policy);
 		}*/
+	}
+
+	public void saveState() {
+		MapView map = (MapView) this.findViewById(R.id.mapview);
+		if(map==null) return;
+		GeoPoint center = (GeoPoint) map.getMapCenter();
+		SQLiteDatabase db = (new DatabaseHandler(getBaseContext()))
+				.getWritableDatabase();
+		ContentValues values = new ContentValues();
+		values.put("zoom", map.getZoomLevel());
+		values.put("x", center.getLongitude());
+		values.put("y", center.getLatitude());
+		db.execSQL("delete from position");
+		db.insert("position", null, values);
+		db.execSQL("delete from settings");
+		JSONObject joke = new JSONObject();
+		try {
+			joke.put("zoom", map.getZoomLevel());
+			joke.put("y", center.getLatitude());
+			joke.put("x", center.getLongitude());
+			GeoPoint g;
+			joke.put("points", pl.getPoints());
+			if (origem.size() > 0) {
+				g = origem.getItem(0).getPoint();
+				joke.put("oy", g.getLatitude());
+				joke.put("ox", g.getLongitude());
+			}
+			if (destino.size() > 0) {
+				g = destino.getItem(0).getPoint();
+				joke.put("dy", g.getLatitude());
+				joke.put("dx", g.getLongitude());
+			}
+			db.execSQL("delete from settings");
+			joke.put("subida", subida);
+			joke.put("ciclorota", ciclorota);
+			joke.put("contramao", contramao);
+			joke.put("source_id",source_id);
+			joke.put("target_id",target_id);
+			joke.put("source_pos",source_pos);
+			joke.put("target_pos",target_pos);
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+			prefs.edit().putString("settings",joke.toString()).commit();
+			
+			values = new ContentValues();
+			values.put("name", "settings");
+			values.put("value", joke.toString());
+			db.insert("settings", null, values);
+	
+			db.execSQL("delete from legend");
+			if ((((ImageView) findViewById(R.id.imageView1)).getVisibility()) == ImageView.VISIBLE) {
+				values = new ContentValues();
+				Bitmap bi = (Bitmap) ((BitmapDrawable) ((ImageView) findViewById(R.id.imageView1))
+						.getDrawable()).getBitmap();
+				ByteArrayOutputStream bos = new ByteArrayOutputStream();
+				bi.compress(Bitmap.CompressFormat.PNG, 100, bos);
+				byte[] bArray = bos.toByteArray();
+				values.put("image", bArray);
+				db.insert("legend", null, values);
+			}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private ItemizedIconOverlay<OverlayItem> addItemized() {
@@ -479,8 +548,12 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 			return;
 		if(!((source_id>0)&&(target_id>0)))return;
 		ocupado = true;
-		GeoPoint a = (origem.getItem(0)).getPoint();
-		GeoPoint b = (destino.getItem(0)).getPoint();
+		final GeoPoint a = (origem.getItem(0)).getPoint();
+		final GeoPoint b = (destino.getItem(0)).getPoint();
+		final MapView map = (MapView) findViewById(R.id.mapview);
+		
+		final double d=(((a.getLatitude()-b.getLatitude())>(a.getLongitude()-b.getLongitude()))? Math.abs((a.getLatitude()-b.getLatitude())) : Math.abs((a.getLongitude()-b.getLongitude())));
+		Toast.makeText(this, "d valendo "+d+" e z valendo "+(int) ((int) 3+Math.abs(Math.log(360/d)/Math.log(2))), Toast.LENGTH_LONG).show();
 		
 		String u="http://"+DOMAIN+"/route/?w0="+source_id+"&w1="+target_id+"&p0="+source_pos+"&p1="+target_pos+"&x0="+a.getLongitude()+"&y0="+a.getLatitude()+"&x1="+b.getLongitude()+"&y1="+b.getLatitude();
 		u += "&alt=1&crit=" + ((subida) ? "subida," : "")
@@ -492,6 +565,9 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 			@Override
 			public void onSuccess(String s) {
 				bicidade.draw(s);
+				map.getController().setZoom((int) ((int) Math.abs(Math.log(360.0/d)/Math.log(2))));
+				map.getController().setCenter(new GeoPoint((a.getLatitude()+b.getLatitude())/2.0000001,(a.getLongitude()+b.getLongitude())/2));
+				
 				setProgressBarIndeterminateVisibility(false);
 			}
 			@Override
@@ -668,62 +744,6 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 		if(map!=null) map.destroyDrawingCache();
 	}
 
-	public void saveState() {
-		MapView map = (MapView) this.findViewById(R.id.mapview);
-		if(map==null) return;
-		GeoPoint center = (GeoPoint) map.getMapCenter();
-		SQLiteDatabase db = (new DatabaseHandler(getBaseContext()))
-				.getWritableDatabase();
-		ContentValues values = new ContentValues();
-		values.put("zoom", map.getZoomLevel());
-		values.put("x", center.getLongitude());
-		values.put("y", center.getLatitude());
-		db.execSQL("delete from position");
-		db.insert("position", null, values);
-		db.execSQL("delete from settings");
-		JSONObject joke = new JSONObject();
-		try {
-			joke.put("zoom", map.getZoomLevel());
-			joke.put("y", center.getLatitude());
-			joke.put("x", center.getLongitude());
-			GeoPoint g;
-			joke.put("points", pl.getPoints());
-			if (origem.size() > 0) {
-				g = origem.getItem(0).getPoint();
-				joke.put("oy", g.getLatitude());
-				joke.put("ox", g.getLongitude());
-			}
-			if (destino.size() > 0) {
-				g = destino.getItem(0).getPoint();
-				joke.put("dy", g.getLatitude());
-				joke.put("dx", g.getLongitude());
-			}
-			db.execSQL("delete from settings");
-			joke.put("subida", subida);
-			joke.put("ciclorota", ciclorota);
-			joke.put("contramao", contramao);
-			values = new ContentValues();
-			values.put("name", "settings");
-			values.put("value", joke.toString());
-			db.insert("settings", null, values);
-
-			db.execSQL("delete from legend");
-			if ((((ImageView) findViewById(R.id.imageView1)).getVisibility()) == ImageView.VISIBLE) {
-				values = new ContentValues();
-				Bitmap bi = (Bitmap) ((BitmapDrawable) ((ImageView) findViewById(R.id.imageView1))
-						.getDrawable()).getBitmap();
-				ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				bi.compress(Bitmap.CompressFormat.PNG, 100, bos);
-				byte[] bArray = bos.toByteArray();
-				values.put("image", bArray);
-				db.insert("legend", null, values);
-			}
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
@@ -737,29 +757,6 @@ public class Bicidade extends Activity implements ConnectionCallbacks,
 		loadMapState();
 	}
 
-	@Override
-	public void onConnected(Bundle arg0) {
-		this.setTitle("conectado");
-
-	}
-
-	@Override
-	public void onConnectionSuspended(int arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void googleConnect() {
-		mGoogleApiClient.connect();
-
-	}
-
-	@Override
-	public void onConnectionFailed(ConnectionResult arg0) {
-		// TODO Auto-generated method stub
-		this.setTitle("Erado");
-
-	}
 
 	public class MyLocationListener implements LocationListener {
 	

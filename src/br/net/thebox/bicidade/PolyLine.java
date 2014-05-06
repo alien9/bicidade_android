@@ -1,7 +1,5 @@
 package br.net.thebox.bicidade;
 
-import br.net.thebox.bicidade.R;
-import br.net.thebox.bicidade.R.string;
 
 import org.json.JSONArray;
 import org.json.JSONException;
