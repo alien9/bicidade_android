@@ -682,7 +682,7 @@ public class Bicidade extends Activity{
 		po.setColor(Color.LTGRAY);
 		po.setAntiAlias(true);
 		po.setDither(true);
-		po.setStyle(Paint.Style.FILL_AND_STROKE);
+		po.setStyle(Paint.Style.FILL);
 		po.setStrokeJoin(Paint.Join.ROUND);
 		po.setStrokeCap(Paint.Cap.ROUND);
 		po.setStrokeWidth(4);
@@ -696,29 +696,36 @@ public class Bicidade extends Activity{
 		pati.moveTo(x, h-10);
 		
 		float y = (float) (h - ry * (pts.getJSONArray(0).getDouble(1) - min) - 20);
-		pati.lineTo(x, y);
-		pati.moveTo(x, y);
+		//pati.lineTo(x, y);
 		float relx=0;
-
 		for (int i = 0; i < pts.length(); i++) {
 			float x0 = x;
 			float y0 = y;
+			if(i>0){
+				double d=(pts.getJSONArray(i).getDouble(1)-pts.getJSONArray(i-1).getDouble(1))/(pts.getJSONArray(i).getDouble(0)-pts.getJSONArray(i-1).getDouble(0));
+				if(d<0) d=0;
+				if(d>0.08) d=0.08;
+				po.setColor(Color.rgb((int) (255*d/0.08), (int) (155*d/0.08), (int) (255-255*d/0.08)));
+			}
 			relx+=pts.getJSONArray(i).getDouble(0);
 			x = 10+rx * relx; // pega a distância
 			y = (float) (h - ry * (pts.getJSONArray(i).getDouble(1) - min) - 20);
 			pati.lineTo(x, y);
+			pati.lineTo(x,h-10);
+			pati.lineTo(x0, h-10);
+			pati.lineTo(x0, y0);
+			ca.drawPath(pati, po);
+			pati = new Path();
+			pati.moveTo(x, y);
 			// pati.quadTo(x0,y0,x, y);//, x0+(x-x0)/2, y0+(y-y0)/2);
 			//pati.quadTo((x + x0) / 2, (y + y0) / 2, x, y);
 			// pati.quadTo(x, y, x0+(x-x0)/2, y0+(y-y0)/2);
-			pati.moveTo(x, y);
 
 		}
-		pati.lineTo(x, h-10);
-		pati.moveTo(x, h-10);
-		pati.lineTo(10, h-10);
-		pati.moveTo(10, h-10);
-		pati.close();
-		ca.drawPath(pati, po);
+		//pati.lineTo(x, h-10);
+		//pati.lineTo(10, h-10);
+		//pati.close();
+		//ca.drawPath(pati, po);
 		po.setStrokeWidth(0);
 		po.setColor(Color.BLACK);
 		po.setTextSize(14);
