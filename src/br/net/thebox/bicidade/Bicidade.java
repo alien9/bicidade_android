@@ -170,6 +170,9 @@ public class Bicidade extends Activity{
 		if(this.getIntent().hasExtra("provider"))
 			prepareTwitter();
 		trackMe();
+		FrameLayout la=(FrameLayout) findViewById(R.id.grafic);
+		la.setOnDragListener(new Drag(this));
+		la.setOnTouchListener(new Touchy(this));
 	}
 
 	private void prepareTwitter() {
@@ -565,9 +568,8 @@ public class Bicidade extends Activity{
 			@Override
 			public void onSuccess(String s) {
 				bicidade.draw(s);
-				map.getController().setZoom((int) ((int) Math.abs(Math.log(360.0/d)/Math.log(2))));
-				map.getController().setCenter(new GeoPoint((a.getLatitude()+b.getLatitude())/2.0000001,(a.getLongitude()+b.getLongitude())/2));
-				
+			    //map.getController().zoomToSpan(Math.abs(a.getLatitudeE6()-b.getLatitudeE6()),Math.abs(a.getLongitudeE6()-b.getLongitudeE6()));
+			    //map.getController().animateTo(new GeoPoint((a.getLatitude()+b.getLatitude())/2.0000001,(a.getLongitude()+b.getLongitude())/2));
 				setProgressBarIndeterminateVisibility(false);
 			}
 			@Override
@@ -682,7 +684,7 @@ public class Bicidade extends Activity{
 		po.setColor(Color.LTGRAY);
 		po.setAntiAlias(true);
 		po.setDither(true);
-		po.setStyle(Paint.Style.FILL);
+		po.setStyle(Paint.Style.FILL_AND_STROKE);
 		po.setStrokeJoin(Paint.Join.ROUND);
 		po.setStrokeCap(Paint.Cap.ROUND);
 		po.setStrokeWidth(4);
@@ -702,10 +704,10 @@ public class Bicidade extends Activity{
 			float x0 = x;
 			float y0 = y;
 			if(i>0){
-				double d=(pts.getJSONArray(i).getDouble(1)-pts.getJSONArray(i-1).getDouble(1))/(pts.getJSONArray(i).getDouble(0)-pts.getJSONArray(i-1).getDouble(0));
+				double d=(pts.getJSONArray(i).getDouble(1)-pts.getJSONArray(i-1).getDouble(1))/(pts.getJSONArray(i).getDouble(0));
 				if(d<0) d=0;
 				if(d>0.08) d=0.08;
-				po.setColor(Color.rgb((int) (255*d/0.08), (int) (155*d/0.08), (int) (255-255*d/0.08)));
+				po.setColor(Color.rgb((int) (255*d/0.08), (int) (255-255*d/0.08), (int) (100-100*d/0.08)));
 			}
 			relx+=pts.getJSONArray(i).getDouble(0);
 			x = 10+rx * relx; // pega a distância
@@ -722,10 +724,6 @@ public class Bicidade extends Activity{
 			// pati.quadTo(x, y, x0+(x-x0)/2, y0+(y-y0)/2);
 
 		}
-		//pati.lineTo(x, h-10);
-		//pati.lineTo(10, h-10);
-		//pati.close();
-		//ca.drawPath(pati, po);
 		po.setStrokeWidth(0);
 		po.setColor(Color.BLACK);
 		po.setTextSize(14);
@@ -736,11 +734,6 @@ public class Bicidade extends Activity{
 		ImageView im = (ImageView) findViewById(R.id.imageView1);
 		im.setImageDrawable(new BitmapDrawable(getResources(), bi));
 		im.setVisibility(ImageView.VISIBLE);
-		//im.setOnDragListener(new Drag());
-		FrameLayout la=(FrameLayout) findViewById(R.id.grafic);
-		
-		la.setOnDragListener(new Drag(pati));
-		la.setOnTouchListener(new Touchy(pts,rx,ry));
 	}
 
 	@Override

@@ -10,9 +10,9 @@ import android.view.View.OnDragListener;
 
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class Drag implements OnDragListener {
-	Path path;
-	public Drag(Path pati) {
-		path=pati;
+	Bicidade bicidade;
+	public Drag(Bicidade b) {
+		bicidade=b;
 	}
 
 	@Override
