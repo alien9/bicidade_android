@@ -28,7 +28,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@android:drawable/title_bar" android:contentDescription="@string/app_name"
-        />   
+        />
+
+                     <ImageView
+                         android:id="@+id/imageView2"
+                         android:layout_width="wrap_content"
+                         android:layout_height="match_parent"
+                         android:scaleType="fitXY"
+                         android:src="@drawable/cursor" />
+   
 </FrameLayout>
 
 </RelativeLayout>
