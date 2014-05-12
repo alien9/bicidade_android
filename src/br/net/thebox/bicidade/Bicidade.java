@@ -170,6 +170,9 @@ public class Bicidade extends Activity{
 		if(this.getIntent().hasExtra("provider"))
 			prepareTwitter();
 		trackMe();
+		FrameLayout la=(FrameLayout) findViewById(R.id.grafic);
+		la.setOnDragListener(new Drag(this));
+		la.setOnTouchListener(new Touchy(this));
 	}
 
 	private void prepareTwitter() {
@@ -565,9 +568,8 @@ public class Bicidade extends Activity{
 			@Override
 			public void onSuccess(String s) {
 				bicidade.draw(s);
-				map.getController().setZoom((int) ((int) Math.abs(Math.log(360.0/d)/Math.log(2))));
-				map.getController().setCenter(new GeoPoint((a.getLatitude()+b.getLatitude())/2.0000001,(a.getLongitude()+b.getLongitude())/2));
-				
+			    //map.getController().zoomToSpan(Math.abs(a.getLatitudeE6()-b.getLatitudeE6()),Math.abs(a.getLongitudeE6()-b.getLongitudeE6()));
+			    //map.getController().animateTo(new GeoPoint((a.getLatitude()+b.getLatitude())/2.0000001,(a.getLongitude()+b.getLongitude())/2));
 				setProgressBarIndeterminateVisibility(false);
 			}
 			@Override
@@ -666,7 +668,76 @@ public class Bicidade extends Activity{
 	}
 
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+<<<<<<< HEAD
 	
+=======
+	public void grafico(JSONArray pts, double alt, double dist, double min,
+			double max) throws JSONException {
+		DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+		float w = displayMetrics.heightPixels;
+		if (displayMetrics.heightPixels > displayMetrics.widthPixels)
+			w = displayMetrics.widthPixels;
+		float h = w / 3;
+		Bitmap bi = Bitmap.createBitmap(Math.round(w), Math.round(h),
+				Bitmap.Config.ARGB_8888);
+		Canvas ca = new Canvas(bi);
+		ca.drawColor(Color.WHITE);
+		Paint po = new Paint(Paint.ANTI_ALIAS_FLAG);
+		po.setColor(Color.LTGRAY);
+		po.setAntiAlias(true);
+		po.setDither(true);
+		po.setStyle(Paint.Style.FILL_AND_STROKE);
+		po.setStrokeJoin(Paint.Join.ROUND);
+		po.setStrokeCap(Paint.Cap.ROUND);
+		po.setStrokeWidth(4);
+		// multiplicador do X
+		float rx = (float) ((w - 20) / dist);
+		// e da altura:
+		float ry = (float) (0.5*(h - 20) / (max - min));
+		Path pati = new Path();
+		//pati.setFillType(Path.FillType.EVEN_ODD);
+		float x = 10;
+		pati.moveTo(x, h-10);
+		
+		float y = (float) (h - ry * (pts.getJSONArray(0).getDouble(1) - min) - 20);
+		//pati.lineTo(x, y);
+		float relx=0;
+		for (int i = 0; i < pts.length(); i++) {
+			float x0 = x;
+			float y0 = y;
+			if(i>0){
+				double d=(pts.getJSONArray(i).getDouble(1)-pts.getJSONArray(i-1).getDouble(1))/(pts.getJSONArray(i).getDouble(0));
+				if(d<0) d=0;
+				if(d>0.08) d=0.08;
+				po.setColor(Color.rgb((int) (255*d/0.08), (int) (255-255*d/0.08), (int) (100-100*d/0.08)));
+			}
+			relx+=pts.getJSONArray(i).getDouble(0);
+			x = 10+rx * relx; // pega a distância
+			y = (float) (h - ry * (pts.getJSONArray(i).getDouble(1) - min) - 20);
+			pati.lineTo(x, y);
+			pati.lineTo(x,h-10);
+			pati.lineTo(x0, h-10);
+			pati.lineTo(x0, y0);
+			ca.drawPath(pati, po);
+			pati = new Path();
+			pati.moveTo(x, y);
+			// pati.quadTo(x0,y0,x, y);//, x0+(x-x0)/2, y0+(y-y0)/2);
+			//pati.quadTo((x + x0) / 2, (y + y0) / 2, x, y);
+			// pati.quadTo(x, y, x0+(x-x0)/2, y0+(y-y0)/2);
+
+		}
+		po.setStrokeWidth(0);
+		po.setColor(Color.BLACK);
+		po.setTextSize(14);
+		ca.drawText(String.format("%.1f", min + alt) + "m", 12, 20, po);
+		ca.drawText(String.format("%.1f", min) + "m", 12, h - 10, po);
+		ca.drawText(String.format("%.1f", dist / 1000) + "km", x - 40,
+				h / 2 + 5, po);
+		ImageView im = (ImageView) findViewById(R.id.imageView1);
+		im.setImageDrawable(new BitmapDrawable(getResources(), bi));
+		im.setVisibility(ImageView.VISIBLE);
+	}
+>>>>>>> 21624d66b6b5cde57eef45f80e7f97db742fb191
 
 	@Override
 	public void onPause() {
