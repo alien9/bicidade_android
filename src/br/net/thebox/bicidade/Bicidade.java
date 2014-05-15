@@ -88,15 +88,15 @@ public class Bicidade extends Activity{
 
 //development
 	 
-	static String TWITTER_CONSUMER_KEY = "duNqceMeYKUm7bzrEtaKSbls8";
-	static String TWITTER_CONSUMER_SECRET = "AO96wm8wk75WTm6hnP1AqWViYIEwWbH6HXQ3SM8STPZ6YRI6bQ";
-	static final String DOMAIN="192.168.0.4:8000";
+//	static String TWITTER_CONSUMER_KEY = "duNqceMeYKUm7bzrEtaKSbls8";
+//	static String TWITTER_CONSUMER_SECRET = "AO96wm8wk75WTm6hnP1AqWViYIEwWbH6HXQ3SM8STPZ6YRI6bQ";
+//	static final String DOMAIN="192.168.0.4:8000";
 	
 //production
 
-//	static final String TWITTER_CONSUMER_KEY = "msu2BJQAQxMYoZy62punKMdex";
-//	static final String TWITTER_CONSUMER_SECRET = "PWyq8kiK7KyLOGNKLqCDtPY6aBbzLX3Tib87nrOF3rCE1lbDjB";
-//	static final String DOMAIN="bicidade.com.br";
+	static final String TWITTER_CONSUMER_KEY = "msu2BJQAQxMYoZy62punKMdex";
+	static final String TWITTER_CONSUMER_SECRET = "PWyq8kiK7KyLOGNKLqCDtPY6aBbzLX3Tib87nrOF3rCE1lbDjB";
+	static final String DOMAIN="bicidade.com.br";
 	
 	
 	// Preference Constants
