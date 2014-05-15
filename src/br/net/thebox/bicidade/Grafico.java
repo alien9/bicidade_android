@@ -21,6 +21,7 @@ import android.view.View.OnTouchListener;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
+import android.widget.TextView;
 
 public class Grafico {
 	private Bicidade bicidade;
@@ -80,12 +81,11 @@ public class Grafico {
 		float y = (float) (h - ry * (pts.getJSONArray(0).getDouble(1) - min) - 20);
 		pati.lineTo(x, y);
 		float relx=0;
-
 		for (int i = 0; i < pts.length(); i++) {
 			float x0 = x;
 			float y0 = y;
 			relx+=pts.getJSONArray(i).getDouble(0);
-			x = 10+rx * relx; // pega a distância
+			x = 10+rx * relx; // pega a distância e transforma em coordenadas
 			y = (float) (h - ry * (pts.getJSONArray(i).getDouble(1) - min) - 20);
 			pati.lineTo(x, y);
 			// pati.quadTo(x0,y0,x, y);//, x0+(x-x0)/2, y0+(y-y0)/2);
@@ -109,6 +109,10 @@ public class Grafico {
 		FrameLayout la=(FrameLayout) bicidade.findViewById(R.id.grafic);
 		la.setOnTouchListener(new Touchy());
 	}
+	private boolean rua(float relx) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 	private class Touchy implements OnTouchListener {
 		private GeoPoint y(float x){
 			float y;
@@ -117,12 +121,37 @@ public class Grafico {
 			Log.i("BICIDADE", "posição "+(x/(w-20)));
 			try {
 				JSONArray pts = juca.getJSONArray("coordinates");
+				JSONArray pss = juca.getJSONArray("altimetrias");
+				float pos=(float) ((x/(w-20))*dist);
+				int j=0;
+				float metros=0;
+				TextView nome_da_rua=(TextView) bicidade.findViewById(R.id.textView1);
+				while(j<pss.length()){
+					metros+=pss.getJSONArray(j).getDouble(0);
+					if(pos<=metros){
+						String rua=pss.getJSONArray(j).getString(3);
+						if(rua.equals("")){
+							nome_da_rua.setText("");
+							nome_da_rua.setVisibility(View.INVISIBLE);
+						}else{
+							nome_da_rua.setText(rua);
+							nome_da_rua.setVisibility(View.VISIBLE);
+							
+						}
+
+						j=pss.length();
+					}
+					j++;
+				}
+				
+				
+				
 				for(int i=0;i<pts.length();i++){
-					float pos=(float) ((x/(w-20))*dist);
-					if(pos<pts.getJSONArray(i).getDouble(3)) {
+					if(pos<=pts.getJSONArray(i).getDouble(3)) {
 						return new GeoPoint(pts.getJSONArray(i).getDouble(1),pts.getJSONArray(i).getDouble(0));
 					}
 				}
+				
 				return new GeoPoint(pts.getJSONArray(pts.length()-1).getDouble(1),pts.getJSONArray(pts.length()-1).getDouble(0));
 								
 			} catch (JSONException e) {

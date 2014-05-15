@@ -39,4 +39,18 @@
    
 </FrameLayout>
 
+<TextView
+    android:id="@+id/textView1"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_above="@+id/grafic"
+    android:layout_centerHorizontal="true"
+    android:layout_marginBottom="19dp"
+    android:background="#EEEEEE"
+    android:paddingBottom="@dimen/marginzinha"
+    android:paddingLeft="@dimen/marginzinha"
+    android:paddingRight="@dimen/marginzinha"
+    android:paddingTop="@dimen/marginzinha"
+    android:textAppearance="?android:attr/textAppearanceMedium" />
+
 </RelativeLayout>
