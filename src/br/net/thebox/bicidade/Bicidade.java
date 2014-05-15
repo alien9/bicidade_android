@@ -59,6 +59,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 public class Bicidade extends Activity{
 	int zoom = 14;
@@ -528,8 +529,8 @@ public class Bicidade extends Activity{
 		target_id=0;
 		origem.removeAllItems();
 		destino.removeAllItems();
-		((ImageView) findViewById(R.id.imageView1))
-				.setVisibility(ImageView.INVISIBLE);
+		((ImageView) findViewById(R.id.imageView1)).setVisibility(View.INVISIBLE);
+		((TextView) findViewById(R.id.textView1)).setVisibility(View.INVISIBLE);
 		pl.setPoints(new JSONArray());
 		MapView map=((MapView) this.findViewById(R.id.mapview));
 		map.postInvalidate();			
@@ -667,6 +668,9 @@ public class Bicidade extends Activity{
 			if (juca.has("altimetrias")) {
 				Grafico gu=new Grafico(this,juca);
 				gu.draw();
+				TextView nome_da_rua=(TextView) this.findViewById(R.id.textView1);
+				nome_da_rua.setText("");
+				nome_da_rua.setVisibility(View.INVISIBLE);
 			}
 		} catch (JSONException e) {
 			Toast.makeText(this, R.string.invalid_data, Toast.LENGTH_LONG)
