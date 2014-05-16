@@ -557,8 +557,6 @@ public class Bicidade extends Activity{
 		final MapView map = (MapView) findViewById(R.id.mapview);
 		
 		final double d=(((a.getLatitude()-b.getLatitude())>(a.getLongitude()-b.getLongitude()))? Math.abs((a.getLatitude()-b.getLatitude())) : Math.abs((a.getLongitude()-b.getLongitude())));
-		Toast.makeText(this, "d valendo "+d+" e z valendo "+(int) ((int) 3+Math.abs(Math.log(360/d)/Math.log(2))), Toast.LENGTH_LONG).show();
-		
 		String u="http://"+DOMAIN+"/route/?w0="+source_id+"&w1="+target_id+"&p0="+source_pos+"&p1="+target_pos+"&x0="+a.getLongitude()+"&y0="+a.getLatitude()+"&x1="+b.getLongitude()+"&y1="+b.getLatitude();
 		u += "&alt=1&crit=" + ((subida) ? "subida," : "")
 				+ ((ciclorota) ? "ciclorota," : "")
@@ -671,6 +669,7 @@ public class Bicidade extends Activity{
 				TextView nome_da_rua=(TextView) this.findViewById(R.id.textView1);
 				nome_da_rua.setText("");
 				nome_da_rua.setVisibility(View.INVISIBLE);
+				central.removeAllItems();
 			}
 		} catch (JSONException e) {
 			Toast.makeText(this, R.string.invalid_data, Toast.LENGTH_LONG)
@@ -679,9 +678,6 @@ public class Bicidade extends Activity{
 		ocupado = false;
 		setProgressBarIndeterminateVisibility(false);
 	}
-
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-
 
 	@Override
 	public void onPause() {

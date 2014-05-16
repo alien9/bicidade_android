@@ -51,6 +51,7 @@
     android:paddingLeft="@dimen/marginzinha"
     android:paddingRight="@dimen/marginzinha"
     android:paddingTop="@dimen/marginzinha"
-    android:textAppearance="?android:attr/textAppearanceMedium" />
+    android:textAppearance="?android:attr/textAppearanceMedium"
+    android:textSize="@dimen/nome_da_rua" />
 
 </RelativeLayout>
