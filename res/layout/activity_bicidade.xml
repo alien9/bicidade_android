@@ -14,13 +14,44 @@
         tilesource="Mapnik"
         />
 
-    <EditText
-        android:id="@+id/editText1"
+<FrameLayout
+    android:id="@+id/grafic"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:layout_centerHorizontal="true"
+    android:layout_marginBottom="1dp"
+    android:layout_margin="1dp"
+     >
+                     <ImageView
+        android:id="@+id/imageView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="40dp"
-        android:ems="10" />
+        android:src="@android:drawable/title_bar" android:contentDescription="@string/app_name"
+        />
+
+                     <ImageView
+                         android:id="@+id/imageView2"
+                         android:layout_width="wrap_content"
+                         android:layout_height="match_parent"
+                         android:scaleType="fitXY"
+                         android:src="@drawable/cursor" />
+   
+</FrameLayout>
+
+<TextView
+    android:id="@+id/textView1"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_above="@+id/grafic"
+    android:layout_centerHorizontal="true"
+    android:layout_marginBottom="19dp"
+    android:background="#EEEEEE"
+    android:paddingBottom="@dimen/marginzinha"
+    android:paddingLeft="@dimen/marginzinha"
+    android:paddingRight="@dimen/marginzinha"
+    android:paddingTop="@dimen/marginzinha"
+    android:textAppearance="?android:attr/textAppearanceMedium"
+    android:textSize="@dimen/nome_da_rua" />
 
 </RelativeLayout>

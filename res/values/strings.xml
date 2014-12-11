@@ -2,7 +2,25 @@
 <resources>
 
     <string name="app_name">Bicidade</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">Ajustes</string>
     <string name="hello_world">Hello world!</string>
-
+    <string name="toque_para_origem">Toque no mapa para indicar a origem</string>
+    <string name="toque_para_destino">Toque no mapa para indicar destino</string>
+    <string name="origem">Origem</string>
+    <string name="destino">Destino</string>
+    <string name="remove">Remover</string>
+    <string name="my_location">Meu local</string>
+    <string name="avoid_slope">Evitar subidas</string>
+    <string name="ciclorota">Preferir ciclorota</string>
+    <string name="invalid_data">Dados inválidos</string>
+   <string name="wrong_way">Permitir contramão</string>
+   <string name="invert">Inverter</string>
+      <string name="google">google id</string>
+      <string name="signin">Entrar no Bicidade</string>
+      <string name="facebook">facebook</string>
+      <string name="twitter">twitter</string>
+      <string name="trackme">Registrar rota anonimamente</string>
+      <string name="server_error">Erro de servidor</string>
+      <string name="not_found">Ponto não encontrado</string>
+      
 </resources>

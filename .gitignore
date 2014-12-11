@@ -1,0 +1,11 @@
+.classpath
+.project
+.settings/
+bin/AndroidManifest.xml
+bin/Bicidade.apk
+bin/classes.dex
+bin/resources.ap_
+bin/*
+gen/*
+hs_err_pid3277.log
+
